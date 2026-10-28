@@ -1,0 +1,1433 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Resultado do 2º turno presidencial de 2026 por município, replay da apuração e auditoria independente das 499 mil urnas com dados públicos do TSE.">
+</head>
+<body style="margin:0">
+<title>Apuração 2026 · 2º turno</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: cabeçalho com a disputa, três colunas (apuração | mapa | contexto), linha do tempo sob o mapa */
+:root {
+  --bg: #f3f4f7; --panel: #ffffff; --panel2: #eef0f4; --line: #dcdfe6; --fg: #14161c; --muted: #646a78;
+  --lula: #d92b35; --lula-soft: #f6d3d5; --flavio: #2f62d9; --flavio-soft: #d5e0f8;
+  --ok: #148a52; --warn: #b7791f; --bad: #c62828; --mapbg: #e7e9ef; --nodata: #c9ccd5; --focus: #14161c;
+  --font: 'Barlow', 'Segoe UI', system-ui, sans-serif; --num: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --r: 10px; color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d0f13; --panel: #161920; --panel2: #1e222b; --line: #2a2f3a; --fg: #eef0f4; --muted: #9097a6;
+  --lula: #ef3b45; --lula-soft: #4a1d22; --flavio: #4b7cf0; --flavio-soft: #1c2a4d;
+  --ok: #35c27e; --warn: #e3a440; --bad: #ff5a5a; --mapbg: #0f1217; --nodata: #3a3f4b; --focus: #ffffff; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0d0f13; --panel: #161920; --panel2: #1e222b; --line: #2a2f3a; --fg: #eef0f4; --muted: #9097a6;
+  --lula: #ef3b45; --lula-soft: #4a1d22; --flavio: #4b7cf0; --flavio-soft: #1c2a4d;
+  --ok: #35c27e; --warn: #e3a440; --bad: #ff5a5a; --mapbg: #0f1217; --nodata: #3a3f4b; --focus: #ffffff; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 14px; }
+.app { display: grid; gap: 12px; padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 1600px; margin: 0 auto; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.num { font-family: var(--num); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); min-width: 0; }
+h2 { font-size: 15px; font-weight: 600; margin: 0; }
+h3 { font-size: 12px; font-weight: 600; margin: 0; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+p { margin: 0; }
+
+/* barra superior */
+.top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.brand { font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 8px; letter-spacing: -.01em; }
+.brand i { width: 22px; height: 22px; border-radius: 6px; background: linear-gradient(90deg, var(--lula) 50%, var(--flavio) 50%); display: inline-block; }
+.brand small { font-weight: 500; color: var(--muted); font-size: 13px; }
+.search { position: relative; flex: 1 1 260px; max-width: 420px; margin-left: auto; }
+.search input { width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px 8px 34px; }
+.search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--muted); }
+.sugest { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); box-shadow: 0 10px 30px rgba(0,0,0,.25); z-index: 30; max-height: 320px; overflow: auto; }
+.sugest button { display: flex; justify-content: space-between; width: 100%; text-align: left; padding: 8px 12px; background: none; border: 0; border-bottom: 1px solid var(--line); }
+.sugest button:hover, .sugest button.ativo { background: var(--panel2); }
+.icon-btn { background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; display: inline-flex; gap: 6px; align-items: center; }
+
+/* disputa */
+.duel { padding: 14px 18px 12px; display: grid; grid-template-columns: auto 1fr auto; gap: 8px 18px; align-items: center; position: relative; overflow: hidden; }
+.cand { display: flex; align-items: center; gap: 12px; }
+.cand.r { flex-direction: row-reverse; text-align: right; }
+.avatar { width: 54px; height: 54px; border-radius: 12px; display: grid; place-items: center; font-family: var(--num); font-weight: 700; font-size: 26px; color: #fff; flex: none; }
+.avatar.l { background: var(--lula); } .avatar.f { background: var(--flavio); }
+.cand b { display: block; font-size: 20px; font-weight: 700; line-height: 1.1; }
+.cand span { color: var(--muted); font-size: 12px; }
+.duel-mid { display: grid; gap: 6px; min-width: 0; }
+.headline { text-align: center; font-size: 19px; font-weight: 600; text-wrap: balance; }
+.headline .w-l { color: var(--lula); } .headline .w-f { color: var(--flavio); }
+.bar { position: relative; height: 40px; border-radius: 8px; overflow: hidden; display: flex; background: var(--panel2); }
+.bar .bl { background: var(--lula); transition: width .35s ease; }
+.bar .bf { background: var(--flavio); transition: width .35s ease; margin-left: auto; }
+.bar .lbl { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; gap: 8px; color: #fff; padding: 0 12px; pointer-events: none; white-space: nowrap; }
+.bar .lbl.l { left: 0; } .bar .lbl.f { right: 0; flex-direction: row-reverse; }
+.bar .lbl strong { font-family: var(--num); font-size: 28px; font-weight: 700; }
+.bar .lbl small { font-size: 12px; opacity: .9; }
+.bar .meio { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 2px; background: var(--fg); transform: translateX(-1px); }
+.bar .meio::after { content: '50%'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--fg); color: var(--bg); font: 600 11px var(--num); padding: 1px 5px; border-radius: 4px; }
+.prog { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); }
+.prog .track { flex: 1; height: 4px; background: var(--panel2); border-radius: 2px; overflow: hidden; }
+.prog .track i { display: block; height: 100%; background: var(--ok); transition: width .35s; }
+
+/* corpo */
+.main { display: grid; grid-template-columns: minmax(250px, 300px) minmax(0, 1fr) minmax(280px, 340px); gap: 12px; align-items: start; }
+.col { display: grid; gap: 12px; min-width: 0; }
+.pad { padding: 14px 16px; display: grid; gap: 10px; }
+.mapcard { position: relative; display: grid; grid-template-rows: auto 1fr auto; min-height: 640px; height: calc(100vh - 210px); max-height: 900px; }
+.maptools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.crumbs { display: flex; gap: 4px; align-items: center; font-size: 13px; flex-wrap: wrap; }
+.crumbs button { background: none; border: 0; padding: 2px 4px; border-radius: 4px; color: var(--muted); }
+.crumbs button:last-child { color: var(--fg); font-weight: 600; }
+.crumbs button:hover { background: var(--panel2); }
+.chips { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto; background: var(--panel2); padding: 3px; border-radius: 999px; }
+.chips button { border: 0; background: none; padding: 5px 11px; border-radius: 999px; font-size: 12.5px; color: var(--muted); font-weight: 500; }
+.chips button[aria-pressed="true"] { background: var(--panel); color: var(--fg); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.mapbox { position: relative; min-height: 0; background: var(--mapbg); overflow: hidden; }
+.mapbox canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: pointer; }
+.zoombtns { position: absolute; right: 12px; bottom: 12px; display: grid; gap: 4px; }
+.zoombtns button { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); font-size: 18px; line-height: 1; }
+.legend { position: absolute; left: 12px; bottom: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; display: grid; gap: 5px; max-width: calc(100% - 80px); }
+.legend .ramp { display: flex; height: 8px; border-radius: 4px; overflow: hidden; width: 200px; max-width: 100%; }
+.legend .ramp i { flex: 1; }
+.legend .ends { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; }
+.tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.3); padding: 8px 10px; font-size: 12.5px; min-width: 190px; z-index: 5; display: grid; gap: 4px; }
+.tip b { font-size: 13.5px; }
+.minibar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: var(--panel2); }
+.minibar i:first-child { background: var(--lula); } .minibar i:last-child { background: var(--flavio); margin-left: auto; }
+.row2 { display: flex; justify-content: space-between; gap: 8px; }
+.l-c { color: var(--lula); } .f-c { color: var(--flavio); }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); }
+
+/* linha do tempo */
+.timeline { display: flex; gap: 12px; align-items: center; padding: 10px 14px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.play { width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--fg); color: var(--bg); display: grid; place-items: center; flex: none; }
+.clock { font-family: var(--num); font-size: 22px; font-weight: 600; min-width: 58px; }
+.slider { flex: 1 1 200px; display: grid; gap: 2px; min-width: 160px; }
+.slider input { width: 100%; accent-color: var(--fg); }
+.slider .marks { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--muted); font-family: var(--num); }
+.live { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 6px 12px; font-size: 12.5px; display: inline-flex; gap: 6px; align-items: center; }
+.live i { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+.live[aria-pressed="false"] i { background: var(--muted); }
+
+/* listas e tabelas */
+.list { display: grid; }
+.item { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); background: none; border-left: 0; border-right: 0; border-top: 0; text-align: left; width: 100%; }
+.item:last-child { border-bottom: 0; }
+button.item:hover { background: var(--panel2); }
+.ring { width: 34px; height: 34px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.pct { font-family: var(--num); font-size: 18px; font-weight: 600; text-align: right; }
+.delta { font-family: var(--num); font-size: 12px; color: var(--muted); text-align: right; }
+.spark { width: 100%; display: block; }
+.statgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.stat { background: var(--panel2); border-radius: 8px; padding: 8px 10px; }
+.stat span { display: block; color: var(--muted); font-size: 11.5px; }
+.stat b { font-family: var(--num); font-size: 20px; font-weight: 600; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.tbl th { text-align: left; color: var(--muted); font-weight: 500; padding: 5px 4px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); }
+.tbl td { padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tbl .n { text-align: right; font-family: var(--num); font-size: 13.5px; white-space: nowrap; }
+.scroll { max-height: 340px; overflow: auto; }
+.tag { display: inline-block; white-space: nowrap; font-size: 10.5px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: var(--panel2); color: var(--muted); margin: 1px 2px 1px 0; }
+.tag.g3 { background: color-mix(in srgb, var(--bad) 18%, transparent); color: var(--bad); }
+.tag.g2 { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+.okbox { display: flex; gap: 10px; align-items: center; background: color-mix(in srgb, var(--ok) 12%, transparent); border: 1px solid color-mix(in srgb, var(--ok) 35%, transparent); border-radius: 8px; padding: 10px 12px; }
+.okbox b { font-family: var(--num); font-size: 26px; color: var(--ok); }
+.cmp { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); width: 100%; background: none; border-left: 0; border-right: 0; border-top: 0; text-align: left; }
+.cmp:hover { background: var(--panel2); }
+.cmp .bars { grid-column: 1 / -1; display: grid; gap: 2px; }
+.cmp .bars i { display: block; height: 5px; border-radius: 3px; }
+.seg { display: inline-flex; background: var(--panel2); border-radius: 999px; padding: 3px; gap: 2px; }
+.seg button { border: 0; background: none; padding: 4px 10px; border-radius: 999px; font-size: 12px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--panel); color: var(--fg); }
+details.local { border-bottom: 1px solid var(--line); }
+details.local summary { list-style: none; cursor: pointer; padding: 8px 0; display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; }
+details.local summary::-webkit-details-marker { display: none; }
+details.local summary small { color: var(--muted); grid-column: 1 / -1; }
+.diverge { display: grid; grid-template-columns: 28px 1fr 1fr 40px 40px; gap: 4px 6px; align-items: center; font-size: 12px; }
+.diverge .lb { display: flex; justify-content: flex-end; } .diverge .rb { display: flex; }
+.diverge .lb i, .diverge .rb i { height: 9px; border-radius: 2px; display: block; }
+.events { display: grid; max-height: 300px; overflow: auto; }
+.ev { display: grid; grid-template-columns: 44px 1fr; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); background: none; border-left: 0; border-right: 0; border-top: 0; text-align: left; width: 100%; }
+.ev:hover { background: var(--panel2); }
+.ev time { font-family: var(--num); color: var(--muted); font-size: 13px; }
+.note { font-size: 12px; color: var(--muted); line-height: 1.45; }
+
+/* navegação e menu de anomalias */
+.vistas { display: inline-flex; background: var(--panel2); border-radius: 999px; padding: 3px; gap: 2px; }
+.vistas button { border: 0; background: none; padding: 6px 14px; border-radius: 999px; font-weight: 600; color: var(--muted); }
+.vistas button[aria-pressed="true"] { background: var(--panel); color: var(--fg); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.anom { display: grid; grid-template-columns: minmax(230px, 270px) minmax(0, 1fr); gap: 12px; align-items: start; }
+.anom-menu { padding: 10px; display: grid; gap: 2px; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; }
+.anom-menu h3 { padding: 10px 8px 4px; }
+.anom-menu button { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; text-align: left; border: 0; background: none; padding: 7px 8px; border-radius: 8px; font-size: 13px; }
+.anom-menu button:hover { background: var(--panel2); }
+.anom-menu button[aria-current="page"] { background: var(--panel2); font-weight: 600; }
+.anom-corpo { display: grid; gap: 12px; min-width: 0; }
+.pill { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.pill.ok { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+.pill.conferir { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+.pill.problema { background: color-mix(in srgb, var(--bad) 18%, transparent); color: var(--bad); }
+.pill.info { background: var(--panel2); color: var(--muted); }
+.veredito { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 10px; background: var(--panel2); }
+.veredito b { font-size: 15px; }
+.big { font-family: var(--num); font-size: 34px; font-weight: 600; line-height: 1; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 8px; }
+.explica { font-size: 13.5px; line-height: 1.55; max-width: 75ch; color: var(--fg); }
+.explica p + p { margin-top: 6px; }
+.chart { width: 100%; display: block; overflow: visible; }
+.chart text { fill: var(--muted); font-size: 11px; font-family: var(--font); }
+.resumo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 10px; }
+.resumo-grid button { text-align: left; border: 1px solid var(--line); background: var(--panel); border-radius: 10px; padding: 12px; display: grid; gap: 6px; }
+.resumo-grid button:hover { border-color: var(--muted); }
+.heat { width: 100%; max-width: 520px; aspect-ratio: 1; image-rendering: pixelated; border-radius: 6px; background: var(--panel2); }
+@media (max-width: 820px) { .anom { grid-template-columns: minmax(0, 1fr); } .anom-menu { position: static; max-height: none; } }
+
+@media (max-width: 1180px) {
+  .main { grid-template-columns: minmax(0, 1fr) minmax(280px, 340px); }
+  .col.left { grid-column: 1 / -1; grid-row: 2; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+}
+@media (max-width: 820px) {
+  .main { grid-template-columns: minmax(0, 1fr); }
+  .col.left { grid-row: auto; order: 3; }
+  .mapcard { order: 1; } .col.right { order: 2; }
+  .mapcard { height: 78vh; min-height: 480px; }
+  .duel { grid-template-columns: 1fr 1fr; }
+  .duel-mid { grid-column: 1 / -1; grid-row: 2; }
+  .cand.r { grid-column: 2; grid-row: 1; }
+  .avatar { width: 42px; height: 42px; font-size: 20px; }
+  .bar .lbl small { display: none; }
+  .chips { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .bar .bl, .bar .bf, .prog .track i { transition: none; } }
+</style>
+
+<div class="app">
+  <div class="top">
+    <div class="brand"><i></i>Apuração 2026 <small>Presidente · 2º turno · 25 de outubro</small></div>
+    <nav class="vistas" aria-label="Seções do app">
+      <button type="button" data-vista="resultado" aria-pressed="true">Resultado</button>
+      <button type="button" data-vista="anomalias" aria-pressed="false">Anomalias</button>
+    </nav>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="busca" type="search" placeholder="Buscar município ou estado…" autocomplete="off" aria-label="Buscar município ou estado">
+      <div class="sugest" id="sugest" hidden></div>
+    </div>
+    <button class="icon-btn" id="tema" type="button" aria-label="Alternar tema claro/escuro">◐ Tema</button>
+  </div>
+
+  <section class="card duel" aria-label="Resultado nacional">
+    <div class="cand"><div class="avatar l">L</div><div><b>Lula</b><span>PT · 13</span></div></div>
+    <div class="duel-mid">
+      <div class="headline" id="headline">Carregando resultado…</div>
+      <div class="bar" id="bar">
+        <div class="bl" style="width:50%"></div><div class="bf" style="width:50%"></div>
+        <div class="lbl l"><strong class="num" id="pl">–</strong><small id="vl"></small></div>
+        <div class="lbl f"><strong class="num" id="pf">–</strong><small id="vf"></small></div>
+        <div class="meio"></div>
+      </div>
+    </div>
+    <div class="cand r"><div class="avatar f">F</div><div><b>Flávio</b><span>PL · 22</span></div></div>
+    <div class="prog"><span id="progtxt">–</span><div class="track"><i id="progbar" style="width:0"></i></div><span id="progdif"></span></div>
+  </section>
+
+  <div class="main">
+    <div class="col left">
+      <section class="card pad" aria-labelledby="h-apur">
+        <h2 id="h-apur">Como foi a apuração</h2>
+        <p class="note">Percentual de cada candidato conforme os boletins de urna chegavam ao TSE. Clique no gráfico para voltar àquele momento no mapa.</p>
+        <svg id="curva" class="spark" viewBox="0 0 280 150" role="img" aria-label="Evolução dos percentuais durante a apuração"></svg>
+      </section>
+      <section class="card pad" aria-labelledby="h-mud">
+        <h2 id="h-mud">Quem ganhou mais votos do 1º para o 2º turno</h2>
+        <p class="note">Crescimento de cada candidato em pontos percentuais dos votos válidos, por estado. Mostra para onde foram os eleitores dos outros candidatos do 1º turno.</p>
+        <div class="diverge" id="diverge"></div>
+      </section>
+      <section class="card pad" aria-labelledby="h-abs">
+        <h2 id="h-abs">Comparecimento: 1º × 2º turno</h2>
+        <div id="abst" class="list"></div>
+      </section>
+    </div>
+
+    <section class="card mapcard" aria-label="Mapa">
+      <div class="maptools">
+        <nav class="crumbs" id="crumbs" aria-label="Navegação"></nav>
+        <div class="chips" role="group" aria-label="O que o mapa mostra" id="camadas">
+          <button type="button" data-camada="vencedor" aria-pressed="true">Vencedor</button>
+          <button type="button" data-camada="virada">Mudança desde o 1º turno</button>
+          <button type="button" data-camada="comparecimento">Comparecimento</button>
+          <button type="button" data-camada="anomalias">Anomalias</button>
+        </div>
+      </div>
+      <div class="mapbox" id="mapbox">
+        <canvas id="mapa" aria-label="Mapa do Brasil por município. Clique num estado para aproximar e num município para ver os detalhes."></canvas>
+        <div class="tip" id="tip" hidden></div>
+        <div class="legend" id="legenda"></div>
+        <div class="zoombtns"><button type="button" id="zin" aria-label="Aproximar">+</button><button type="button" id="zout" aria-label="Afastar">−</button></div>
+        <div class="loading" id="carregando">Carregando mapa de 5.570 municípios…</div>
+      </div>
+      <div class="timeline">
+        <button class="play" id="play" type="button" aria-label="Reproduzir a apuração">▶</button>
+        <div class="clock" id="relogio">–</div>
+        <div class="slider">
+          <input type="range" id="tempo" min="0" max="76" value="76" aria-label="Momento da apuração">
+          <div class="marks"><span>17h</span><span>18h</span><span>19h</span><span>20h</span><span>21h</span><span>22h</span><span>23h</span></div>
+        </div>
+        <button class="live" id="final" type="button" aria-pressed="true"><i></i>Resultado final</button>
+      </div>
+    </section>
+
+    <div class="col right" id="direita"></div>
+  </div>
+  <div class="anom" id="anom" hidden>
+    <aside class="card anom-menu" id="anom-menu" aria-label="Análises de anomalias"></aside>
+    <section class="anom-corpo" id="anom-corpo" aria-live="polite"><div class="card pad"><p class="muted">Carregando análises…</p></div></section>
+  </div>
+
+  <p class="note">Fonte: TSE, dados abertos por seção eleitoral (arquivos de 26/10/2026), e malha municipal do IBGE. O horário de cada urna é o de recebimento do boletim pelo TSE (horário de Brasília). As anomalias são pontos para conferir no boletim de urna, não provas de fraude.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+(() => {
+'use strict';
+// ---------------- utilitários ----------------
+const $ = (s, el = document) => el.querySelector(s);
+const h = (tag, attrs = {}, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v; else if (k === 'style') e.style.cssText = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) e.append(c.nodeType ? c : document.createTextNode(String(c)));
+  return e;
+};
+const fmtInt = new Intl.NumberFormat('pt-BR');
+const fmtComp = new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 });
+const pct = (v, d = 1) => (isFinite(v) ? (v * 100).toFixed(d).replace('.', ',') + '%' : '–');
+const pp = (v, d = 1) => (isFinite(v) ? (v >= 0 ? '+' : '−') + Math.abs(v * 100).toFixed(d).replace('.', ',') : '–');
+const sem = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const NOMES = { AC: 'Acre', AL: 'Alagoas', AM: 'Amazonas', AP: 'Amapá', BA: 'Bahia', CE: 'Ceará', DF: 'Distrito Federal', ES: 'Espírito Santo', GO: 'Goiás', MA: 'Maranhão', MG: 'Minas Gerais', MS: 'Mato Grosso do Sul', MT: 'Mato Grosso', PA: 'Pará', PB: 'Paraíba', PE: 'Pernambuco', PI: 'Piauí', PR: 'Paraná', RJ: 'Rio de Janeiro', RN: 'Rio Grande do Norte', RO: 'Rondônia', RR: 'Roraima', RS: 'Rio Grande do Sul', SC: 'Santa Catarina', SE: 'Sergipe', SP: 'São Paulo', TO: 'Tocantins', ZZ: 'Exterior' };
+const UF_IBGE = { 11: 'RO', 12: 'AC', 13: 'AM', 14: 'RR', 15: 'PA', 16: 'AP', 17: 'TO', 21: 'MA', 22: 'PI', 23: 'CE', 24: 'RN', 25: 'PB', 26: 'PE', 27: 'AL', 28: 'SE', 29: 'BA', 31: 'MG', 32: 'ES', 33: 'RJ', 35: 'SP', 41: 'PR', 42: 'SC', 43: 'RS', 50: 'MS', 51: 'MT', 52: 'GO', 53: 'DF' };
+const NOME_REG = { N: 'Norte', NE: 'Nordeste', CO: 'Centro-Oeste', SE: 'Sudeste', S: 'Sul', EX: 'Exterior' };
+const GRAV = { COMP_MAIOR_APTOS: 3, SOMA_DIVERGENTE: 3, NOMINAIS_DIVERGENTE: 3, ZONA_MENOS_10: 3, MUNICIPIO_MENOS_10: 3, APTOS_MUDOU: 2, ZERO_VOTOS: 2, DESVIO_LOCAL: 2, VIRADA_ATIPICA: 2, COMPARECIMENTO_SALTO: 2, VOTOS_ANULADOS: 2, EMPATE_ZONA: 2, EMPATE_MUNICIPIO: 2 };
+const CURTO = { EMPATE_SECAO: 'Empate na seção', ZERO_VOTOS: 'Candidato zerado', MENOS_10: 'Menos de 10 votos', DESVIO_LOCAL: 'Destoa do local', APTOS_MUDOU: 'Aptos mudaram', COMPARECIMENTO_SALTO: 'Comparecimento mudou', COMPARECIMENTO_ALTO: 'Comparecimento ≥ 97%', NAO_INSTALADA: 'Não instalada', ORIGEM_NAO_URNA: 'Fora da urna normal', VIRADA_ATIPICA: 'Virada atípica', BRANCOS_NULOS_ALTO: 'Muitos brancos/nulos', EMPATE_MUNICIPIO: 'Empate no município', COMP_MAIOR_APTOS: 'Votantes > aptos', SOMA_DIVERGENTE: 'Soma divergente', NOMINAIS_DIVERGENTE: 'Nominais divergentes', VOTOS_ANULADOS: 'Votos anulados', BU_TARDIO: 'Boletim tardio', EMPATE_ZONA: 'Empate na zona', ZONA_MENOS_10: '< 10 votos na zona', MUNICIPIO_MENOS_10: '< 10 votos no município' };
+const g = (t) => GRAV[t] || 1;
+const hora = (b) => { const m = 17 * 60 + b * 5; return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; };
+
+// ---------------- estado ----------------
+const S = { camada: 'vencedor', uf: null, mun: null, tempo: null, hover: null, tipoAnom: null, t: d3.zoomIdentity };
+let D, MUNIS, BY_IBGE, BY_KEY, UFS, ANOMS, NB, CORES;
+const ufCache = new Map();
+
+// ---------------- tema ----------------
+const lerCores = () => {
+  CORES = { lula: css('--lula'), flavio: css('--flavio'), nodata: css('--nodata'), mapbg: css('--mapbg'), fg: css('--fg'), muted: css('--muted'), line: css('--line'), panel: css('--panel'), bad: css('--bad'), warn: css('--warn'), ok: css('--ok'), panel2: css('--panel2') };
+  CORES.neutro = d3.interpolateRgb(CORES.panel2, CORES.muted)(0.35);
+};
+$('#tema').addEventListener('click', () => {
+  const r = document.documentElement, escuro = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme = escuro ? 'light' : 'dark';
+  try { localStorage.setItem('tema', r.dataset.theme); } catch (e) {}
+  lerCores(); legenda(); desenhar(); painelEsquerdo();
+});
+try { const t = localStorage.getItem('tema'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+
+// ---------------- agregações ----------------
+const votos = (m) => {
+  if (S.tempo == null) return [m.L, m.F, m.sec];
+  const tl = m.tl; let lo = 0, hi = tl.length - 1, r = null;
+  while (lo <= hi) { const mid = (lo + hi) >> 1; if (tl[mid][0] <= S.tempo) { r = tl[mid]; lo = mid + 1; } else hi = mid - 1; }
+  return r ? [r[1], r[2], r[3]] : [0, 0, 0];
+};
+const somar = (lista) => {
+  const a = { L: 0, F: 0, sec: 0, secTot: 0, aptos: 0, comp: 0, bn: 0, L1: 0, F1: 0, O1: 0, aptos1: 0, comp1: 0, anom: 0 };
+  for (const m of lista) {
+    const [l, f, n] = votos(m);
+    a.L += l; a.F += f; a.sec += n; a.secTot += m.sec; a.aptos += m.aptos; a.comp += m.comp; a.bn += m.bn;
+    a.L1 += m.L1; a.F1 += m.F1; a.O1 += m.O1; a.aptos1 += m.aptos1; a.comp1 += m.comp1; a.anom += m.anom;
+  }
+  return a;
+};
+const share = (a) => (a.L + a.F ? a.L / (a.L + a.F) : NaN);
+
+// ---------------- cores das camadas ----------------
+function corMun(m) {
+  if (S.camada === 'anomalias') {
+    const r = m.anom / m.sec;
+    return m.anom ? d3.interpolateRgb(CORES.panel2, CORES.warn)(Math.min(1, 0.25 + r * 8)) : CORES.panel2;
+  }
+  if (S.camada === 'comparecimento') return d3.interpolateRgb(CORES.panel2, CORES.ok)(Math.max(0, Math.min(1, (m.comp / m.aptos - 0.6) / 0.35)));
+  if (S.camada === 'virada') {
+    const s2 = m.L / (m.L + m.F), s1 = m.L1 / (m.L1 + m.F1);
+    const d = s2 - s1; if (!isFinite(d)) return CORES.nodata;
+    const k = Math.min(1, Math.abs(d) / 0.12);
+    return d3.interpolateRgb(CORES.neutro, d > 0 ? CORES.lula : CORES.flavio)(0.15 + 0.85 * k);
+  }
+  const [l, f] = votos(m);
+  if (l + f === 0) return CORES.nodata;
+  const s = l / (l + f), k = Math.min(1, Math.abs(s - 0.5) / 0.3);
+  return d3.interpolateRgb(CORES.neutro, s >= 0.5 ? CORES.lula : CORES.flavio)(0.3 + 0.7 * k);
+}
+
+function legenda() {
+  const el = $('#legenda'); el.replaceChildren();
+  const ramp = (cols, a, b, titulo) => el.append(h('div', {}, titulo), h('div', { class: 'ramp' }, cols.map((c) => h('i', { style: `background:${c}` }))), h('div', { class: 'ends' }, h('span', {}, a), h('span', {}, b)));
+  const N = 9;
+  if (S.camada === 'vencedor') ramp(d3.range(N).map((i) => { const s = i / (N - 1); const k = Math.min(1, Math.abs(s - 0.5) / 0.5); return d3.interpolateRgb(CORES.neutro, s >= 0.5 ? CORES.lula : CORES.flavio)(0.3 + 0.7 * k); }), 'Flávio +60', 'Lula +60', 'Vantagem no município (pontos)');
+  else if (S.camada === 'virada') ramp(d3.range(N).map((i) => { const s = i / (N - 1); return d3.interpolateRgb(CORES.neutro, s >= 0.5 ? CORES.flavio : CORES.lula)(0.15 + 0.85 * Math.abs(s - 0.5) * 2); }), 'Lula cresceu 12+', 'Flávio cresceu 12+', 'Quem avançou mais desde o 1º turno');
+  else if (S.camada === 'comparecimento') ramp(d3.range(N).map((i) => d3.interpolateRgb(CORES.panel2, CORES.ok)(i / (N - 1))), '60%', '95%', 'Comparecimento');
+  else {
+    el.append(h('div', {}, 'Anomalias por município e por seção'));
+    el.append(h('div', { class: 'ends', style: 'gap:10px;justify-content:flex-start' },
+      h('span', {}, h('i', { class: 'dot', style: `background:${CORES.bad}` }), ' forte'), h('span', {}, h('i', { class: 'dot', style: `background:${CORES.warn}` }), ' atenção'), h('span', {}, h('i', { class: 'dot', style: `background:${CORES.muted}` }), ' informativa')));
+  }
+  if (S.tempo != null && S.camada === 'vencedor') el.append(h('div', { class: 'ends' }, h('span', {}, h('i', { class: 'dot', style: `background:${CORES.nodata}` }), ' ainda sem urnas apuradas')));
+}
+
+// ---------------- mapa ----------------
+const cv = $('#mapa'), box = $('#mapbox'), ctx = cv.getContext('2d');
+const hit = document.createElement('canvas').getContext('2d');
+let W = 0, H = 0, DPR = 1, proj, FEATS = [], UFF = [], zoom;
+// rótulos de estados pequenos ficam ao lado da costa, ligados por uma linha
+const CALLOUT = { RN: [-33.2, -4.6], PB: [-33.2, -6.6], PE: [-33.2, -8.6], AL: [-33.2, -10.6], SE: [-33.2, -12.6], ES: [-36.6, -20.6], RJ: [-38.6, -24.6], DF: [-44.2, -14.9] };
+
+function decod(polys) { return polys.filter((p) => p.length).map((p) => p.map((r) => { const o = []; for (let i = 0; i < r.length; i += 2) o.push([r[i] / 1000, r[i + 1] / 1000]); return o; })); }
+function construirGeo(malhaMun, malhaUf) {
+  const ufGeo = malhaUf.map(([c, p]) => ({ type: 'Feature', properties: { uf: UF_IBGE[c] }, geometry: { type: 'MultiPolygon', coordinates: decod(p) } }));
+  const munGeo = malhaMun.map(([c, p]) => ({ type: 'Feature', properties: { ibge: c }, geometry: { type: 'MultiPolygon', coordinates: decod(p) } }));
+  return { ufGeo, munGeo };
+}
+let GEO;
+function projetar() {
+  const r = box.getBoundingClientRect();
+  W = Math.max(200, r.width); H = Math.max(200, r.height); DPR = window.devicePixelRatio || 1;
+  cv.width = W * DPR; cv.height = H * DPR;
+  // Mercator plano (sem geometria esférica: a orientação dos anéis do IBGE não importa)
+  const merc = ([lon, lat]) => [lon * Math.PI / 180, -Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360))];
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const f of GEO.ufGeo) for (const p of f.geometry.coordinates) for (const c of p[0]) { const [x, y] = merc(c); if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  const ew = W - 100, eh = H - 40, s = Math.min(ew / (x1 - x0), eh / (y1 - y0));
+  const ox = 20 + (ew - s * (x1 - x0)) / 2, oy = 20 + (eh - s * (y1 - y0)) / 2;
+  proj = (ll) => { const [x, y] = merc(ll); return [ox + s * (x - x0), oy + s * (y - y0)]; };
+  const plano = d3.geoTransform({ point(lon, lat) { const p = proj([lon, lat]); this.stream.point(p[0], p[1]); } });
+  const path = d3.geoPath(plano);
+  const p2d = (f) => { const p = new Path2D(); d3.geoPath(plano, p)(f); return p; };
+  FEATS = GEO.munGeo.map((f) => ({ m: BY_IBGE.get(f.properties.ibge), p: p2d(f), b: path.bounds(f), c: path.centroid(f) })).filter((f) => f.m);
+  UFF = GEO.ufGeo.map((f) => ({ uf: f.properties.uf, p: p2d(f), b: path.bounds(f), c: path.centroid(f) }));
+  for (const u of UFF) { const ll = CALLOUT[u.uf]; u.lab = ll ? proj(ll) : u.c; u.call = !!ll; if (u.uf === 'GO') u.lab = [u.c[0] - 8, u.c[1] + 18]; }
+  FEATS.forEach((f) => { f.m.feat = f; });
+}
+
+function desenhar() {
+  if (!FEATS.length) return;
+  const t = S.t, k = t.k;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.fillStyle = CORES.mapbg; ctx.fillRect(0, 0, W, H);
+  ctx.setTransform(DPR * k, 0, 0, DPR * k, DPR * t.x, DPR * t.y);
+  const foco = S.uf;
+  for (const f of FEATS) {
+    ctx.globalAlpha = foco && f.m.uf !== foco ? 0.35 : 1;
+    ctx.fillStyle = corMun(f.m); ctx.fill(f.p);
+  }
+  ctx.globalAlpha = 1;
+  if (k > 2.2) { ctx.lineWidth = 0.6 / k; ctx.strokeStyle = CORES.mapbg; for (const f of FEATS) if (!foco || f.m.uf === foco) ctx.stroke(f.p); }
+  ctx.lineWidth = 1.3 / k; ctx.strokeStyle = CORES.mapbg;
+  for (const u of UFF) ctx.stroke(u.p);
+  if (foco) { const u = UFF.find((x) => x.uf === foco); if (u) { ctx.lineWidth = 2 / k; ctx.strokeStyle = CORES.fg; ctx.stroke(u.p); } }
+  if (S.hover && S.hover.feat) { ctx.lineWidth = 1.5 / k; ctx.strokeStyle = CORES.fg; ctx.stroke(S.hover.feat.p); }
+  if (S.mun && S.mun.feat) { ctx.lineWidth = 3 / k; ctx.strokeStyle = CORES.fg; ctx.stroke(S.mun.feat.p); }
+  // pontos de anomalias
+  if (S.camada === 'anomalias') {
+    const r = Math.max(1.6, Math.min(5, 1.2 * Math.sqrt(k))) / k;
+    for (const gr of [1, 2, 3]) {
+      ctx.beginPath();
+      for (const a of ANOMS) {
+        if (a.g !== gr || !a.xy || (S.tipoAnom && a.tipo !== S.tipoAnom) || (foco && a.uf !== foco)) continue;
+        ctx.moveTo(a.xy[0] + r, a.xy[1]); ctx.arc(a.xy[0], a.xy[1], r, 0, 6.2832);
+      }
+      ctx.fillStyle = gr === 3 ? CORES.bad : gr === 2 ? CORES.warn : CORES.muted; ctx.fill();
+    }
+  }
+  // rótulos em coordenadas de tela
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const tela = (p) => [p[0] * k + t.x, p[1] * k + t.y];
+  ctx.textBaseline = 'middle';
+  if (!foco || k < 2.5) {
+    const ag = new Map(); for (const u of UFS.values()) ag.set(u.uf, u.agg);
+    for (const u of UFF) {
+      const a = ag.get(u.uf); if (!a) continue;
+      const s = share(a); const [x, y] = tela(u.lab);
+      if (u.call) { const [cx, cy] = tela(u.c); ctx.strokeStyle = CORES.muted; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x - 2, y); ctx.stroke(); }
+      rotulo(x, y, u.uf, isFinite(s) ? pct(Math.max(s, 1 - s), 0) : '…', isFinite(s) ? (s >= 0.5 ? CORES.lula : CORES.flavio) : CORES.nodata, u.call);
+    }
+  } else {
+    // municípios maiores do estado em foco
+    const vis = FEATS.filter((f) => f.m.uf === foco).sort((a, b) => b.m.aptos - a.m.aptos);
+    const lim = Math.round(6 + k * 2), usados = [];
+    ctx.font = `600 12px ${css('--font')}`;
+    for (const f of vis.slice(0, 120)) {
+      if (usados.length >= lim) break;
+      const [x, y] = tela(f.c); if (x < 0 || y < 0 || x > W || y > H) continue;
+      const w = ctx.measureText(f.m.nome).width + 8;
+      if (usados.some((u) => Math.abs(u[0] - x) < (u[2] + w) / 2 && Math.abs(u[1] - y) < 16)) continue;
+      usados.push([x, y, w]);
+      ctx.fillStyle = CORES.fg; ctx.strokeStyle = CORES.mapbg; ctx.lineWidth = 3; ctx.textAlign = 'center';
+      const nome = f.m.nome.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase());
+      ctx.strokeText(nome, x, y); ctx.fillText(nome, x, y);
+    }
+  }
+}
+function rotulo(x, y, sigla, valor, cor, caixa) {
+  ctx.font = `700 12px ${css('--num')}`; ctx.textAlign = 'left';
+  const t1 = sigla, t2 = valor, w1 = ctx.measureText(t1).width, w2 = ctx.measureText(t2).width;
+  const w = w1 + w2 + 18, hh = 20, x0 = caixa ? x : x - w / 2, y0 = y - hh / 2;
+  ctx.fillStyle = caixa ? cor : 'rgba(0,0,0,0)';
+  if (caixa) { ctx.beginPath(); ctx.roundRect(x0, y0, w, hh, 4); ctx.fill(); }
+  ctx.fillStyle = caixa ? '#fff' : CORES.fg; ctx.strokeStyle = CORES.mapbg; ctx.lineWidth = 3;
+  if (!caixa) { ctx.strokeText(t1, x0 + 6, y); }
+  ctx.fillText(t1, x0 + 6, y);
+  if (!caixa) { ctx.fillStyle = cor; ctx.beginPath(); ctx.arc(x0 + w1 + 9, y, 3, 0, 6.283); ctx.fill(); ctx.strokeText(t2, x0 + w1 + 14, y); ctx.fillStyle = CORES.fg; }
+  ctx.font = `500 12px ${css('--num')}`;
+  ctx.fillText(t2, x0 + w1 + 14, y);
+}
+
+function achar(sx, sy) {
+  const [x, y] = S.t.invert([sx, sy]);
+  hit.setTransform(1, 0, 0, 1, 0, 0);
+  for (const f of FEATS) {
+    const b = f.b; if (x < b[0][0] || x > b[1][0] || y < b[0][1] || y > b[1][1]) continue;
+    if (hit.isPointInPath(f.p, x, y)) return f.m;
+  }
+  return null;
+}
+function irPara(bounds, maxK = 40, dur = 650) {
+  const [[x0, y0], [x1, y1]] = bounds;
+  const k = Math.min(maxK, 0.85 / Math.max((x1 - x0) / W, (y1 - y0) / H));
+  const t = d3.zoomIdentity.translate(W / 2, H / 2).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
+  d3.select(cv).transition().duration(dur).call(zoom.transform, t);
+}
+
+function dica(m, sx, sy) {
+  const tip = $('#tip');
+  if (!m) { tip.hidden = true; return; }
+  const [l, f] = votos(m), v = l + f;
+  tip.replaceChildren(
+    h('b', {}, `${m.nome.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase())} · ${m.uf}`),
+    v ? h('div', { class: 'minibar' }, h('i', { style: `width:${(l / v) * 100}%` }), h('i', { style: `width:${(f / v) * 100}%` })) : h('div', { class: 'muted' }, 'Ainda sem urnas apuradas'),
+    v ? h('div', { class: 'row2' }, h('span', { class: 'l-c' }, `Lula ${pct(l / v)}`), h('span', { class: 'f-c' }, `Flávio ${pct(f / v)}`)) : null,
+    v ? h('div', { class: 'row2 muted' }, h('span', {}, `${fmtInt.format(l)} × ${fmtInt.format(f)}`), h('span', {}, S.tempo != null ? `${pct(votos(m)[2] / m.sec, 0)} apurado` : '')) : null,
+    S.camada === 'virada' ? h('div', { class: 'muted' }, `Lula entre os dois: ${pct(m.L1 / (m.L1 + m.F1))} → ${pct(m.L / (m.L + m.F))}`) : null,
+    S.camada === 'comparecimento' ? h('div', { class: 'muted' }, `Comparecimento ${pct(m.comp / m.aptos)} (1º turno ${pct(m.comp1 / m.aptos1)})`) : null,
+    m.anom ? h('div', { style: `color:${CORES.warn}` }, `${m.anom} anomalia(s) sinalizada(s)`) : null,
+    h('div', { class: 'muted', style: 'font-size:11px' }, S.uf === m.uf ? 'Clique para ver detalhes' : 'Clique para abrir o estado'));
+  tip.hidden = false;
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  tip.style.left = Math.min(W - tw - 6, Math.max(6, sx + 14)) + 'px';
+  tip.style.top = (sy + th + 20 > H ? Math.max(6, sy - th - 10) : sy + 14) + 'px';
+}
+
+function iniciarMapa() {
+  zoom = d3.zoom().scaleExtent([0.8, 120]).on('zoom', (ev) => { S.t = ev.transform; $('#tip').hidden = true; requestAnimationFrame(desenhar); });
+  d3.select(cv).call(zoom).on('dblclick.zoom', null);
+  cv.addEventListener('mousemove', (ev) => {
+    const r = cv.getBoundingClientRect(), sx = ev.clientX - r.left, sy = ev.clientY - r.top;
+    const m = achar(sx, sy);
+    if (m !== S.hover) { S.hover = m; desenhar(); }
+    dica(m, sx, sy);
+  });
+  cv.addEventListener('mouseleave', () => { S.hover = null; $('#tip').hidden = true; desenhar(); });
+  cv.addEventListener('click', (ev) => {
+    const r = cv.getBoundingClientRect(); const m = achar(ev.clientX - r.left, ev.clientY - r.top);
+    if (!m) return;
+    if (S.uf === m.uf) abrirMun(m); else abrirUF(m.uf);
+  });
+  $('#zin').addEventListener('click', () => d3.select(cv).transition().call(zoom.scaleBy, 1.8));
+  $('#zout').addEventListener('click', () => d3.select(cv).transition().call(zoom.scaleBy, 1 / 1.8));
+  new ResizeObserver(() => { if (!GEO) return; projetar(); ANOMS.forEach((a) => { a.xy = a.lat != null ? proj([a.lon, a.lat]) : null; }); d3.select(cv).call(zoom.transform, d3.zoomIdentity); if (S.mun) irPara(S.mun.feat.b, 40, 0); else if (S.uf) irPara(UFF.find((u) => u.uf === S.uf).b, 40, 0); }).observe(box);
+}
+
+// ---------------- navegação ----------------
+function migalhas() {
+  const el = $('#crumbs'); el.replaceChildren();
+  const add = (txt, fn) => { if (el.childNodes.length) el.append(h('span', { class: 'muted' }, '›')); el.append(h('button', { type: 'button', onclick: fn }, txt)); };
+  add('Brasil', abrirBrasil);
+  if (S.uf) add(NOMES[S.uf], () => abrirUF(S.uf));
+  if (S.mun) add(titulo(S.mun.nome), () => {});
+}
+const titulo = (s) => s.toLowerCase().replace(/(^|\s)(\S)/g, (_, a, c) => a + c.toUpperCase()).replace(/ (De|Do|Da|Dos|Das|E) /g, (x) => x.toLowerCase());
+function abrirBrasil() { S.uf = null; S.mun = null; d3.select(cv).transition().duration(650).call(zoom.transform, d3.zoomIdentity); migalhas(); painelDireito(); desenhar(); }
+function abrirUF(uf) {
+  if (uf === 'ZZ') { S.uf = 'ZZ'; S.mun = null; migalhas(); painelDireito(); return; }
+  S.uf = uf; S.mun = null; const u = UFF.find((x) => x.uf === uf); if (u) irPara(u.b, 30);
+  migalhas(); painelDireito(); desenhar();
+}
+function abrirMun(m) {
+  S.uf = m.uf; S.mun = m; if (m.feat) irPara(m.feat.b, 60);
+  migalhas(); painelDireito(); desenhar();
+}
+
+// ---------------- cabeçalho ----------------
+function cabecalho() {
+  const a = somar(MUNIS), s = share(a), v = a.L + a.F;
+  $('#bar .bl').style.width = (v ? s * 100 : 50) + '%';
+  $('#bar .bf').style.width = (v ? (1 - s) * 100 : 50) + '%';
+  $('#pl').textContent = v ? pct(s, 2) : '–'; $('#pf').textContent = v ? pct(1 - s, 2) : '–';
+  $('#vl').textContent = v ? fmtInt.format(a.L) + ' votos' : ''; $('#vf').textContent = v ? fmtInt.format(a.F) + ' votos' : '';
+  const ap = a.sec / D.totalSecoes;
+  $('#progbar').style.width = ap * 100 + '%';
+  $('#progtxt').textContent = `${pct(ap, ap < 1 && ap > 0.99 ? 2 : 1)} das seções apuradas`;
+  $('#progdif').textContent = v ? `Diferença: ${fmtInt.format(Math.abs(a.L - a.F))} votos` : '';
+  const hl = $('#headline'); hl.replaceChildren();
+  const lider = a.L >= a.F ? ['Lula', 'w-l'] : ['Flávio', 'w-f'];
+  if (S.tempo == null || ap >= 0.999) hl.append(h('span', { class: lider[1] }, lider[0]), ' é eleito presidente');
+  else if (!v) hl.append('Aguardando as primeiras urnas');
+  else hl.append(h('span', { class: lider[1] }, lider[0]), ` lidera às ${hora(S.tempo)}`);
+  $('#relogio').textContent = S.tempo == null ? 'Final' : hora(S.tempo);
+}
+
+// ---------------- painel esquerdo ----------------
+function painelEsquerdo() {
+  // curva da apuração
+  const svg = d3.select('#curva'); svg.selectAll('*').remove();
+  const Wc = 280, Hc = 150, m = { l: 34, r: 8, t: 8, b: 22 };
+  const pts = D.timeline.map((t, i) => ({ i, ap: t[2] / D.totalSecoes, s: t[0] + t[1] ? t[0] / (t[0] + t[1]) : null })).filter((p) => p.s != null && p.ap > 0.002);
+  const x = d3.scaleLinear([0, 1], [m.l, Wc - m.r]);
+  const ext = d3.extent(pts, (p) => p.s); const dev = Math.max(0.04, Math.abs(ext[0] - 0.5), Math.abs(ext[1] - 0.5));
+  const y = d3.scaleLinear([0.5 - dev, 0.5 + dev], [Hc - m.b, m.t]);
+  const ticks = [0.5 - dev / 1.5, 0.5, 0.5 + dev / 1.5].map((v) => Math.round(v * 100) / 100);
+  svg.append('g').selectAll('line').data(ticks).join('line').attr('x1', m.l).attr('x2', Wc - m.r).attr('y1', y).attr('y2', y).attr('stroke', CORES.line).attr('stroke-dasharray', (d) => (d === 0.5 ? null : '2 3'));
+  svg.append('g').selectAll('text').data(ticks).join('text').attr('x', m.l - 5).attr('y', y).attr('dy', '0.32em').attr('text-anchor', 'end').attr('fill', CORES.muted).attr('font-size', 10).text((d) => Math.round(d * 100) + '%');
+  [[0, '0%'], [0.5, '50%'], [1, '100% apurado']].forEach(([v, t]) => svg.append('text').attr('x', x(v)).attr('y', Hc - 6).attr('text-anchor', v === 0 ? 'start' : v === 1 ? 'end' : 'middle').attr('fill', CORES.muted).attr('font-size', 10).text(t));
+  const linha = (f) => d3.line().x((p) => x(p.ap)).y((p) => y(f(p)))(pts);
+  svg.append('path').attr('d', linha((p) => p.s)).attr('fill', 'none').attr('stroke', CORES.lula).attr('stroke-width', 2).attr('stroke-linejoin', 'round');
+  svg.append('path').attr('d', linha((p) => 1 - p.s)).attr('fill', 'none').attr('stroke', CORES.flavio).attr('stroke-width', 2).attr('stroke-linejoin', 'round');
+  const fim = pts[pts.length - 1];
+  svg.append('circle').attr('cx', x(fim.ap)).attr('cy', y(fim.s)).attr('r', 3).attr('fill', CORES.lula);
+  svg.append('circle').attr('cx', x(fim.ap)).attr('cy', y(1 - fim.s)).attr('r', 3).attr('fill', CORES.flavio);
+  if (S.tempo != null) {
+    const ap = D.timeline[S.tempo][2] / D.totalSecoes;
+    svg.append('line').attr('x1', x(ap)).attr('x2', x(ap)).attr('y1', m.t).attr('y2', Hc - m.b).attr('stroke', CORES.fg).attr('stroke-width', 1.5);
+  }
+  svg.append('rect').attr('x', m.l).attr('y', 0).attr('width', Wc - m.l - m.r).attr('height', Hc).attr('fill', 'transparent').style('cursor', 'pointer')
+    .on('click', (ev) => {
+      const [px] = d3.pointer(ev); const ap = x.invert(px);
+      const i = D.timeline.findIndex((t) => t[2] / D.totalSecoes >= ap);
+      definirTempo(i < 0 ? null : i);
+    });
+
+  // ganho por estado
+  const dv = $('#diverge'); dv.replaceChildren();
+  const linhas = [...UFS.values()].filter((u) => u.uf !== 'ZZ').map((u) => {
+    const a = u.fin, v1 = a.L1 + a.F1 + a.O1, v2 = a.L + a.F;
+    return { uf: u.uf, gl: a.L / v2 - a.L1 / v1, gf: a.F / v2 - a.F1 / v1 };
+  }).sort((p, q) => (q.gl - q.gf) - (p.gl - p.gf));
+  const mx = d3.max(linhas, (r) => Math.max(r.gl, r.gf));
+  dv.append(h('span', {}), h('span', { class: 'l-c', style: 'text-align:right;font-weight:600' }, 'Lula'), h('span', { class: 'f-c', style: 'font-weight:600' }, 'Flávio'), h('span', { class: 'muted', style: 'text-align:right' }, 'L'), h('span', { class: 'muted', style: 'text-align:right' }, 'F'));
+  for (const r of linhas) {
+    dv.append(
+      h('button', { type: 'button', class: 'tag', style: 'border:0', onclick: () => abrirUF(r.uf) }, r.uf),
+      h('span', { class: 'lb' }, h('i', { style: `width:${(r.gl / mx) * 100}%;background:${CORES.lula}` })),
+      h('span', { class: 'rb' }, h('i', { style: `width:${(r.gf / mx) * 100}%;background:${CORES.flavio}` })),
+      h('span', { class: 'num l-c', style: 'text-align:right' }, pp(r.gl)),
+      h('span', { class: 'num f-c', style: 'text-align:right' }, pp(r.gf)));
+  }
+
+  // comparecimento por região
+  const ab = $('#abst'); ab.replaceChildren();
+  const regs = Object.entries(D.regioes).map(([k, ufs]) => ({ k, a: somar(MUNIS.filter((m) => ufs.includes(m.uf))) }));
+  regs.unshift({ k: 'BR', a: somar(MUNIS) });
+  for (const r of regs) {
+    const c1 = r.a.comp1 / r.a.aptos1, c2 = r.a.comp / r.a.aptos;
+    ab.append(h('div', { class: 'row2', style: 'padding:5px 0;border-bottom:1px solid var(--line)' },
+      h('span', { style: r.k === 'BR' ? 'font-weight:600' : '' }, r.k === 'BR' ? 'Brasil' : NOME_REG[r.k]),
+      h('span', { class: 'num' }, `${pct(c1)} → ${pct(c2)} `, h('span', { style: `color:${c2 >= c1 ? CORES.ok : CORES.bad}` }, pp(c2 - c1)))));
+  }
+}
+
+// ---------------- painel direito ----------------
+function anel(p, cor) {
+  const r = 14, c = 2 * Math.PI * r;
+  const s = d3.create('svg').attr('class', 'ring').attr('viewBox', '0 0 34 34');
+  s.append('circle').attr('cx', 17).attr('cy', 17).attr('r', r).attr('fill', 'none').attr('stroke', CORES.panel2).attr('stroke-width', 3);
+  s.append('circle').attr('cx', 17).attr('cy', 17).attr('r', r).attr('fill', 'none').attr('stroke', cor).attr('stroke-width', 3).attr('stroke-dasharray', `${c * p} ${c}`).attr('transform', 'rotate(-90 17 17)');
+  s.append('text').attr('x', 17).attr('y', 17).attr('dy', '0.35em').attr('text-anchor', 'middle').attr('font-size', 9).attr('font-family', css('--num')).attr('fill', CORES.fg).text(Math.floor(p * 100) + '%');
+  return s.node();
+}
+function linhaResultado(nome, a, onclick, extra) {
+  const s = share(a), v = a.L + a.F, lider = s >= 0.5;
+  const el = h(onclick ? 'button' : 'div', { class: 'item', type: onclick ? 'button' : null, onclick },
+    anel(a.secTot ? a.sec / a.secTot : 0, CORES.ok),
+    h('div', {}, h('div', { style: 'font-weight:600' }, nome), v ? h('div', { class: 'minibar', style: 'margin-top:5px' }, h('i', { style: `width:${s * 100}%` }), h('i', { style: `width:${(1 - s) * 100}%` })) : h('div', { class: 'muted' }, 'aguardando')),
+    h('div', {}, h('div', { class: 'pct', style: `color:${v ? (lider ? CORES.lula : CORES.flavio) : CORES.muted}` }, v ? pct(Math.max(s, 1 - s)) : '–'), extra ? h('div', { class: 'delta' }, extra) : null));
+  return el;
+}
+function cartaoAnomalias(lista, tituloCard) {
+  const card = h('section', { class: 'card pad' }, h('h2', {}, tituloCard));
+  const tipos = D.tipos;
+  const contar = new Map(); for (const a of lista) contar.set(a.tipo, (contar.get(a.tipo) || 0) + 1);
+  const erros = ['COMP_MAIOR_APTOS', 'SOMA_DIVERGENTE', 'NOMINAIS_DIVERGENTE'].reduce((s, t) => s + (contar.get(t) || 0), 0);
+  card.append(h('div', { class: 'okbox', style: erros ? `border-color:${CORES.bad}` : '' }, h('b', { style: erros ? `color:${CORES.bad}` : '' }, fmtInt.format(erros)), h('div', {}, h('div', { style: 'font-weight:600' }, 'seções com erro de soma'), h('div', { class: 'note' }, 'Mais votantes que aptos, ou votos que não fecham com o comparecimento.'))));
+  card.append(h('p', { class: 'note' }, 'Barra cheia: casos encontrados. Barra cinza: quantos seriam esperados só pelo acaso. Clique num tipo para ver os casos no mapa.'));
+  const ord = tipos.filter((t) => (contar.get(t.tipo) || 0) > 0).sort((a, b) => (contar.get(b.tipo) || 0) - (contar.get(a.tipo) || 0));
+  const mx = d3.max(ord, (t) => Math.max(contar.get(t.tipo) || 0, +t.esperado_acaso || 0)) || 1;
+  const nac = !S.uf;
+  for (const t of ord) {
+    const n = contar.get(t.tipo), e = nac && t.esperado_acaso !== '' ? +t.esperado_acaso : null;
+    const cor = g(t.tipo) === 3 ? CORES.bad : g(t.tipo) === 2 ? CORES.warn : CORES.muted;
+    const ativo = S.tipoAnom === t.tipo;
+    card.append(h('button', { type: 'button', class: 'cmp', 'aria-pressed': ativo ? 'true' : 'false', style: ativo ? 'background:var(--panel2)' : '', onclick: () => { S.tipoAnom = ativo ? null : t.tipo; definirCamada('anomalias'); painelDireito(); } },
+      h('span', {}, CURTO[t.tipo] || t.tipo), h('span', { class: 'num' }, fmtInt.format(n), e != null ? h('span', { class: 'muted' }, ` / ${fmtInt.format(e)} esperado`) : ''),
+      h('span', { class: 'bars' }, h('i', { style: `width:${Math.max(1, Math.sqrt(n / mx) * 100)}%;background:${cor}` }), e != null ? h('i', { style: `width:${Math.max(1, Math.sqrt(e / mx) * 100)}%;background:${CORES.line}` }) : null)));
+  }
+  if (S.tipoAnom) {
+    const casos = lista.filter((a) => a.tipo === S.tipoAnom).slice(0, 200);
+    card.append(h('h3', {}, `${CURTO[S.tipoAnom]}: ${fmtInt.format(lista.filter((a) => a.tipo === S.tipoAnom).length)} casos`));
+    const tb = h('tbody');
+    for (const a of casos) tb.append(h('tr', { style: 'cursor:pointer', onclick: () => { const m = BY_KEY.get(`${a.uf}|${a.cod}`); if (m) abrirMun(m); } },
+      h('td', {}, titulo(a.mun || ''), h('div', { class: 'muted' }, `${a.uf} · zona ${a.zona ?? '–'}${a.secao ? ' · seção ' + a.secao : ''}`)), h('td', {}, a.det)));
+    card.append(h('div', { class: 'scroll' }, h('table', { class: 'tbl' }, tb)));
+  }
+  return card;
+}
+function eventos() {
+  const ev = [];
+  let lider = null;
+  D.timeline.forEach((t, i) => {
+    if (!(t[0] + t[1])) return;
+    const l = t[0] > t[1] ? 'Lula' : 'Flávio';
+    if (lider && l !== lider) ev.push([i, `${l} passa à frente`, `com ${pct(t[2] / D.totalSecoes)} das seções apuradas`]);
+    if (!lider) ev.push([i, 'Primeiras urnas', `${l} começa na frente`]);
+    lider = l;
+  });
+  // momento em que o resultado de cada estado ficou matematicamente definido
+  for (const u of UFS.values()) {
+    if (u.uf === 'ZZ') continue;
+    const ms = MUNIS.filter((m) => m.uf === u.uf), media = (u.agg.L + u.agg.F) / u.agg.secTot;
+    for (let b = 0; b < NB; b++) {
+      let L = 0, F = 0, n = 0;
+      for (const m of ms) { const s0 = S.tempo; S.tempo = b; const [l, f, k] = votos(m); S.tempo = s0; L += l; F += f; n += k; }
+      if (Math.abs(L - F) > (u.agg.secTot - n) * media) { ev.push([b, `${L > F ? 'Lula' : 'Flávio'} garante ${NOMES[u.uf]}`, `vantagem maior que os votos restantes (${pct(n / u.agg.secTot, 0)} apurado)`]); break; }
+    }
+  }
+  const T = D.timeline;
+  for (let b = 0; b < NB; b++) {
+    const t = T[b], rest = (D.totalSecoes - t[2]) * ((T[NB - 1][0] + T[NB - 1][1]) / D.totalSecoes);
+    if (t[2] && Math.abs(t[0] - t[1]) > rest) { ev.push([b, `${t[0] > t[1] ? 'Lula' : 'Flávio'} é matematicamente eleito`, `com ${pct(t[2] / D.totalSecoes)} das seções apuradas`, true]); break; }
+  }
+  return ev.sort((a, b) => b[0] - a[0] || (b[3] ? 1 : 0) - (a[3] ? 1 : 0));
+}
+let EVENTOS;
+function painelDireito() {
+  const el = $('#direita'); el.replaceChildren();
+  if (!S.uf) {
+    const reg = h('section', { class: 'card pad' }, h('h2', {}, 'Por região'));
+    for (const [k, ufs] of Object.entries(D.regioes)) {
+      const ms = MUNIS.filter((m) => ufs.includes(m.uf)), a = somar(ms);
+      const fl = d3.sum(ms, (m) => m.L), ff = d3.sum(ms, (m) => m.F), s1 = a.L1 / (a.L1 + a.F1 + a.O1);
+      reg.append(linhaResultado(NOME_REG[k], a, k === 'EX' ? () => abrirUF('ZZ') : null, `Lula ${pp(fl / (fl + ff) - s1)} desde o 1º`));
+    }
+    el.append(reg);
+    if (S.camada === 'anomalias') el.append(cartaoAnomalias(ANOMS, 'Pontos de atenção no Brasil'));
+    const evc = h('section', { class: 'card pad' }, h('h2', {}, 'Momentos da apuração'), h('p', { class: 'note' }, 'Clique num momento para ver o mapa naquele horário.'));
+    const evl = h('div', { class: 'events' });
+    for (const [b, t, d, forte] of EVENTOS) evl.append(h('button', { type: 'button', class: 'ev', onclick: () => definirTempo(b) }, h('time', {}, hora(b)), h('div', {}, h('div', { style: forte ? 'font-weight:700' : 'font-weight:600' }, t), h('div', { class: 'note' }, d))));
+    evc.append(evl);
+    el.append(evc);
+    if (S.camada !== 'anomalias') el.append(cartaoAnomaliasResumo());
+    return;
+  }
+  if (S.uf === 'ZZ') {
+    const ms = MUNIS.filter((m) => m.uf === 'ZZ').sort((a, b) => b.aptos - a.aptos);
+    const c = h('section', { class: 'card pad' }, h('h2', {}, 'Votos no exterior'), linhaResultado('Exterior', somar(ms)));
+    const tb = h('tbody'); for (const m of ms) { const s = m.L / (m.L + m.F); tb.append(h('tr', {}, h('td', {}, titulo(m.nome)), h('td', { class: 'n l-c' }, pct(s)), h('td', { class: 'n f-c' }, pct(1 - s)), h('td', { class: 'n' }, fmtInt.format(m.L + m.F)))); }
+    c.append(h('div', { class: 'scroll' }, h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, 'Cidade'), h('th', { class: 'n' }, 'Lula'), h('th', { class: 'n' }, 'Flávio'), h('th', { class: 'n' }, 'Válidos'))), tb)));
+    el.append(c); return;
+  }
+  if (S.mun) { painelMunicipio(el, S.mun); return; }
+  painelEstado(el, S.uf);
+}
+function cartaoAnomaliasResumo() {
+  const card = h('section', { class: 'card pad' }, h('h2', {}, 'Auditoria rápida'));
+  const erros = ANOMS.filter((a) => ['COMP_MAIOR_APTOS', 'SOMA_DIVERGENTE', 'NOMINAIS_DIVERGENTE'].includes(a.tipo)).length;
+  card.append(h('div', { class: 'okbox' }, h('b', {}, fmtInt.format(erros)), h('div', {}, h('div', { style: 'font-weight:600' }, `seções com erro de soma, de ${fmtInt.format(D.totalSecoes)}`), h('div', { class: 'note' }, `${fmtInt.format(ANOMS.length)} pontos estatísticos para conferir.`))));
+  card.append(h('button', { type: 'button', class: 'icon-btn', onclick: () => definirCamada('anomalias') }, 'Ver anomalias no mapa →'));
+  return card;
+}
+function painelEstado(el, uf) {
+  const u = UFS.get(uf), a = somar(MUNIS.filter((m) => m.uf === uf));
+  const c = h('section', { class: 'card pad' }, h('h2', {}, NOMES[uf]), linhaResultado('Resultado no estado', a));
+  c.append(h('div', { class: 'statgrid' },
+    h('div', { class: 'stat' }, h('span', {}, 'Lula'), h('b', { class: 'l-c' }, fmtInt.format(a.L))),
+    h('div', { class: 'stat' }, h('span', {}, 'Flávio'), h('b', { class: 'f-c' }, fmtInt.format(a.F))),
+    h('div', { class: 'stat' }, h('span', {}, 'Comparecimento'), h('b', {}, pct(a.comp / a.aptos))),
+    h('div', { class: 'stat' }, h('span', {}, 'Municípios'), h('b', {}, fmtInt.format(MUNIS.filter((m) => m.uf === uf).length)))));
+  el.append(c);
+  if (S.camada === 'anomalias') { el.append(cartaoAnomalias(ANOMS.filter((x) => x.uf === uf), `Pontos de atenção em ${NOMES[uf]}`)); }
+  // lista de municípios
+  const ms = MUNIS.filter((m) => m.uf === uf);
+  const lista = h('section', { class: 'card pad' }, h('h2', {}, 'Municípios'));
+  let ordem = 'aptos';
+  const seg = h('div', { class: 'seg', role: 'group', 'aria-label': 'Ordenar municípios' });
+  const corpo = h('tbody');
+  const render = () => {
+    const ord = [...ms].sort((p, q) => ordem === 'aptos' ? q.aptos - p.aptos : ordem === 'lula' ? q.L / (q.L + q.F) - p.L / (p.L + p.F) : ordem === 'flavio' ? p.L / (p.L + p.F) - q.L / (q.L + q.F) : q.anom - p.anom);
+    corpo.replaceChildren(...ord.slice(0, 300).map((m) => { const [l, f] = votos(m), s = l / (l + f);
+      return h('tr', { style: 'cursor:pointer', onclick: () => abrirMun(m) }, h('td', {}, titulo(m.nome)), h('td', { class: 'n l-c' }, pct(s)), h('td', { class: 'n f-c' }, pct(1 - s)), h('td', { class: 'n' }, fmtComp.format(m.aptos)), h('td', { class: 'n', style: m.anom ? `color:${CORES.warn}` : '' }, m.anom || '')); }));
+    seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.o === ordem));
+  };
+  [['aptos', 'Maiores'], ['lula', 'Mais Lula'], ['flavio', 'Mais Flávio'], ['anom', 'Anomalias']].forEach(([o, t]) => seg.append(h('button', { type: 'button', 'data-o': o, onclick: () => { ordem = o; render(); } }, t)));
+  lista.append(seg, h('div', { class: 'scroll', style: 'max-height:420px' }, h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, 'Município'), h('th', { class: 'n' }, 'Lula'), h('th', { class: 'n' }, 'Flávio'), h('th', { class: 'n' }, 'Eleitores'), h('th', { class: 'n' }, '⚠'))), corpo)));
+  render();
+  el.append(lista);
+}
+
+async function carregarUF(uf) {
+  if (!ufCache.has(uf)) ufCache.set(uf, fetch(`data/uf/${uf}.json`).then((r) => r.json()));
+  return ufCache.get(uf);
+}
+function painelMunicipio(el, m) {
+  const a = somar([m]), s = share(a);
+  const c = h('section', { class: 'card pad' }, h('div', {}, h('h2', { style: 'font-size:19px' }, titulo(m.nome)), h('div', { class: 'muted' }, `${NOMES[m.uf]} · ${fmtInt.format(m.sec)} seções · ${m.zonas.length} zona(s)`)));
+  c.append(linhaResultado(s >= 0.5 ? 'Lula venceu aqui' : 'Flávio venceu aqui', a));
+  const v1 = m.L1 + m.F1 + m.O1;
+  c.append(h('div', { class: 'statgrid' },
+    h('div', { class: 'stat' }, h('span', {}, 'Lula'), h('b', { class: 'l-c' }, fmtInt.format(a.L)), h('span', {}, `1º turno: ${pct(m.L1 / v1)} → ${pct(m.L / (m.L + m.F))}`)),
+    h('div', { class: 'stat' }, h('span', {}, 'Flávio'), h('b', { class: 'f-c' }, fmtInt.format(a.F)), h('span', {}, `1º turno: ${pct(m.F1 / v1)} → ${pct(m.F / (m.L + m.F))}`)),
+    h('div', { class: 'stat' }, h('span', {}, 'Comparecimento'), h('b', {}, pct(m.comp / m.aptos)), h('span', {}, `1º turno: ${pct(m.comp1 / m.aptos1)}`)),
+    h('div', { class: 'stat' }, h('span', {}, 'Brancos + nulos'), h('b', {}, fmtInt.format(m.bn)), h('span', {}, `${pct(m.bn / m.comp)} dos votantes`))));
+  el.append(c);
+  // zonas
+  const zc = h('section', { class: 'card pad' }, h('h2', {}, 'Zonas eleitorais'));
+  const zt = h('tbody');
+  for (const z of [...m.zonas].sort((p, q) => q[2] - p[2])) { const sz = z[4] / (z[4] + z[5]); zt.append(h('tr', {}, h('td', {}, `Zona ${z[0]}`), h('td', { class: 'n' }, z[1]), h('td', { class: 'n l-c' }, pct(sz)), h('td', { class: 'n f-c' }, pct(1 - sz)), h('td', { class: 'n' }, pct(z[3] / z[2])))); }
+  zc.append(h('div', { class: 'scroll', style: 'max-height:200px' }, h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, 'Zona'), h('th', { class: 'n' }, 'Seções'), h('th', { class: 'n' }, 'Lula'), h('th', { class: 'n' }, 'Flávio'), h('th', { class: 'n' }, 'Compar.'))), zt)));
+  el.append(zc);
+  // anomalias do município
+  const an = ANOMS.filter((x) => x.uf === m.uf && x.cod === m.cod);
+  if (an.length) {
+    const ac = h('section', { class: 'card pad' }, h('h2', {}, `Pontos de atenção (${an.length})`));
+    const tb = h('tbody'); for (const x of an.slice(0, 100)) tb.append(h('tr', {}, h('td', {}, h('span', { class: `tag g${g(x.tipo)}` }, CURTO[x.tipo] || x.tipo), h('div', { class: 'muted' }, x.secao ? `Zona ${x.zona} · seção ${x.secao}` : 'Município inteiro')), h('td', {}, x.det)));
+    ac.append(h('div', { class: 'scroll', style: 'max-height:240px' }, h('table', { class: 'tbl' }, tb)));
+    el.append(ac);
+  }
+  // locais e seções
+  const lc = h('section', { class: 'card pad' }, h('h2', {}, 'Locais de votação e seções'), h('p', { class: 'note' }, 'Abra um local para ver cada seção (urna), com o horário em que o boletim chegou ao TSE.'));
+  const corpo = h('div', {}, h('p', { class: 'muted' }, 'Carregando seções…'));
+  lc.append(corpo); el.append(lc);
+  carregarUF(m.uf).then((d) => {
+    if (S.mun !== m) return;
+    const locs = new Map();
+    for (const sct of d.secoes) { const lo = d.locais[sct[0]]; if (lo[0] !== m.cod) continue; if (!locs.has(sct[0])) locs.set(sct[0], { lo, secs: [], L: 0, F: 0, ap: 0, an: 0 }); const o = locs.get(sct[0]); o.secs.push(sct); o.L += sct[4]; o.F += sct[5]; o.ap += sct[2]; if (sct[11]) o.an += sct[11].length; }
+    const arr = [...locs.values()].sort((p, q) => q.ap - p.ap);
+    const filtro = h('input', { type: 'search', placeholder: 'Filtrar locais…', 'aria-label': 'Filtrar locais', style: 'width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 10px' });
+    const lista = h('div', { class: 'scroll', style: 'max-height:460px' });
+    const render = () => {
+      const q = sem(filtro.value);
+      lista.replaceChildren(...arr.filter((o) => !q || sem(o.lo[2] + ' ' + (o.lo[3] || '')).includes(q)).slice(0, 250).map((o) => {
+        const sl = o.L / (o.L + o.F);
+        const det = h('details', { class: 'local' }, h('summary', {}, h('span', { style: 'font-weight:600' }, titulo(o.lo[2])), h('span', { class: 'num' }, h('span', { class: 'l-c' }, pct(sl)), ' · ', h('span', { class: 'f-c' }, pct(1 - sl))), h('small', {}, `${o.lo[3] ? titulo(o.lo[3]) + ' · ' : ''}Zona ${o.lo[1]} · ${o.secs.length} seções · ${fmtInt.format(o.ap)} eleitores`, o.an ? h('span', { class: 'tag g2', style: 'margin-left:6px' }, `${o.an} ⚠`) : '')));
+        det.addEventListener('toggle', () => {
+          if (!det.open || det.dataset.ok) return; det.dataset.ok = 1;
+          const tb = h('tbody');
+          for (const x of o.secs.sort((p, q) => p[1] - q[1])) tb.append(h('tr', {}, h('td', { class: 'n' }, x[1]), h('td', { class: 'n' }, x[2]), h('td', { class: 'n' }, pct(x[3] / x[2], 0)), h('td', { class: 'n l-c' }, x[4]), h('td', { class: 'n f-c' }, x[5]), h('td', { class: 'n' }, x[6]), h('td', { class: 'n muted' }, x[9]), h('td', {}, (x[11] || []).map((t) => h('span', { class: `tag g${g(t)}` }, CURTO[t] || t)))));
+          det.append(h('div', { style: 'overflow:auto' }, h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', { class: 'n' }, 'Seção'), h('th', { class: 'n' }, 'Aptos'), h('th', { class: 'n' }, 'Compar.'), h('th', { class: 'n' }, 'Lula'), h('th', { class: 'n' }, 'Flávio'), h('th', { class: 'n' }, 'Br+Nu'), h('th', { class: 'n' }, 'BU'), h('th', {}, ''))), tb)));
+        });
+        return det;
+      }));
+    };
+    filtro.addEventListener('input', render);
+    corpo.replaceChildren(filtro, lista); render();
+  }).catch(() => { corpo.replaceChildren(h('p', { style: `color:${CORES.bad}` }, 'Não foi possível carregar as seções deste estado. Recarregue a página para tentar de novo.')); });
+}
+
+// ---------------- camadas, tempo, busca ----------------
+function definirCamada(c) {
+  S.camada = c;
+  document.querySelectorAll('#camadas button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.camada === c));
+  if (c !== 'vencedor' && S.tempo != null) definirTempo(null, true);
+  legenda(); desenhar(); painelDireito();
+}
+document.querySelectorAll('#camadas button').forEach((b) => b.addEventListener('click', () => definirCamada(b.dataset.camada)));
+
+let tocando = null;
+function definirTempo(b, silencioso) {
+  S.tempo = b == null || b >= NB - 1 ? null : b;
+  if (S.tempo != null && S.camada !== 'vencedor') { S.camada = 'vencedor'; document.querySelectorAll('#camadas button').forEach((x) => x.setAttribute('aria-pressed', x.dataset.camada === 'vencedor')); }
+  $('#tempo').value = S.tempo == null ? NB - 1 : S.tempo;
+  $('#final').setAttribute('aria-pressed', S.tempo == null);
+  for (const u of UFS.values()) u.agg = somar(MUNIS.filter((m) => m.uf === u.uf));
+  cabecalho(); legenda(); desenhar(); painelEsquerdo();
+  if (!silencioso && !tocando) painelDireito();
+}
+$('#tempo').addEventListener('input', (e) => { parar(); definirTempo(+e.target.value); });
+$('#final').addEventListener('click', () => { parar(); definirTempo(null); });
+function parar() { if (tocando) { clearInterval(tocando); tocando = null; $('#play').textContent = '▶'; $('#play').setAttribute('aria-label', 'Reproduzir a apuração'); painelDireito(); } }
+$('#play').addEventListener('click', () => {
+  if (tocando) { parar(); return; }
+  let b = S.tempo == null ? 18 : S.tempo; // começa às 18h30, antes das primeiras urnas em volume
+  $('#play').textContent = '❚❚'; $('#play').setAttribute('aria-label', 'Pausar');
+  tocando = setInterval(() => { b++; if (b >= NB) { parar(); definirTempo(null); return; } definirTempo(b, true); }, 450);
+});
+
+function busca() {
+  const inp = $('#busca'), box = $('#sugest');
+  let itens = [], sel = 0;
+  const idx = [...Object.entries(NOMES).map(([uf, n]) => ({ t: n, k: sem(n), uf })), ...MUNIS.filter((m) => m.uf !== 'ZZ').map((m) => ({ t: titulo(m.nome), k: sem(m.nome), m }))];
+  const escolher = (it) => { box.hidden = true; inp.value = ''; inp.blur(); if (it.m) abrirMun(it.m); else abrirUF(it.uf); };
+  const mostrar = () => {
+    box.replaceChildren(...itens.map((it, i) => h('button', { type: 'button', class: i === sel ? 'ativo' : '', onmousedown: (e) => { e.preventDefault(); escolher(it); } }, h('span', {}, it.t), h('span', { class: 'muted' }, it.m ? it.m.uf : 'Estado'))));
+    box.hidden = !itens.length;
+  };
+  inp.addEventListener('input', () => {
+    const q = sem(inp.value.trim()); sel = 0;
+    if (q.length < 2) { itens = []; mostrar(); return; }
+    itens = idx.filter((it) => it.k.includes(q)).sort((a, b) => (a.k.startsWith(q) ? 0 : 1) - (b.k.startsWith(q) ? 0 : 1) || (a.uf ? -1 : 0) || (b.m && a.m ? b.m.aptos - a.m.aptos : 0)).slice(0, 12);
+    mostrar();
+  });
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { sel = Math.min(itens.length - 1, sel + 1); mostrar(); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { sel = Math.max(0, sel - 1); mostrar(); e.preventDefault(); }
+    else if (e.key === 'Enter' && itens[sel]) escolher(itens[sel]);
+    else if (e.key === 'Escape') { box.hidden = true; }
+  });
+  inp.addEventListener('blur', () => setTimeout(() => { box.hidden = true; }, 150));
+}
+
+// ---------------- menu Anomalias ----------------
+let A = null, pagina = 'resumo', turnoU = '2';
+const U = () => (turnoU === '1' ? A.urnas1t : A.urnas);
+const fP = (v, d = 1) => (v == null || !isFinite(v) ? '–' : (+v).toFixed(d).replace('.', ',') + '%');
+const fN = (v) => (v == null ? '–' : fmtInt.format(v));
+const pill = ([k, t]) => h('span', { class: `pill ${k}` }, t);
+function irCaso(uf, mun) {
+  const m = BY_KEY.get(`${uf}|${+mun}`); mostrarVista('resultado');
+  if (m) abrirMun(m); else if (uf) abrirUF(uf);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function mostrarVista(v) {
+  document.querySelectorAll('.vistas button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.vista === v));
+  document.querySelector('.main').hidden = v !== 'resultado';
+  $('#anom').hidden = v !== 'anomalias';
+  if (v === 'anomalias') carregarAnomalias();
+}
+document.querySelectorAll('.vistas button').forEach((b) => b.addEventListener('click', () => mostrarVista(b.dataset.vista)));
+
+const contaUrna = (...tipos) => (U() ? tipos.reduce((s, t) => s + (U().contagem[t] || 0), 0) : null);
+const PAGINAS = [
+  { g: 'Visão geral', id: 'resumo', t: 'Resumo de tudo', v: () => ['info', 'Início'] },
+  { g: 'Visão geral', id: 'alegacoes', t: 'Alegações × dados', resumo: 'O que circulou sobre o 2º turno, o que as agências de checagem concluíram e o que os dados oficiais mostram.', v: () => ['info', '7 alegações'] },
+  { g: 'Urnas: integridade', id: 'assinaturas', t: 'Assinaturas digitais e hashes', resumo: 'Cada urna assina seus arquivos. Conferimos a assinatura e o hash de todos eles.',
+    v: () => { if (!U()) return ['info', 'Processando']; const t = U().totais; const f = t.assinConferidas - t.assinOk + t.hashConferidos - t.hashOk + (t.cadeiaConferidas || 0) - (t.cadeiaOk || 0); return f ? ['problema', `${fN(f)} falhas`] : ['ok', 'Tudo confere']; } },
+  { g: 'Urnas: integridade', id: 'recontagem', t: 'Recontagem voto a voto', resumo: 'Recontamos cada voto do registro digital e comparamos com o boletim e com o total divulgado pelo TSE.',
+    v: () => { if (!U()) return ['info', 'Processando']; const t = U().totais; const f = t.rdvConferidos - t.rdvOk + t.buConferidos - t.buOk; return f ? ['problema', `${fN(f)} divergências`] : ['ok', 'Tudo confere']; } },
+  { g: 'Urnas: comportamento', id: 'biometria', t: 'Liberação pelo mesário e biometria', resumo: 'Seções onde muitos eleitores votaram sem a própria digital, liberados pelo mesário.',
+    v: () => (U() ? ['conferir', `${fN(contaUrna('LIBERACAO_MESARIO', 'BIOMETRIA_BAIXA'))} seções`] : ['info', 'Processando']) },
+  { g: 'Urnas: comportamento', id: 'ritmo', t: 'Ritmo de votação e trocas de urna', resumo: 'Votos rápidos demais, rajadas, votos fora de hora e urnas substituídas, lidos nos logs.',
+    v: () => (U() ? ['conferir', `${fN(contaUrna('VOTO_RAPIDO', 'RAJADA', 'VOTO_TARDIO'))} seções`] : ['info', 'Processando']) },
+  { g: 'Estatística', id: 'especiais', t: 'Presídios e seções especiais', resumo: 'Como votaram presídios, unidades de internação, voto em trânsito e seções temporárias, pelo tipo oficial de seção do TSE.',
+    v: () => ['info', `${fN(A.especiais.totais[3].secoes)} em presídios`] },
+  { g: 'Estatística', id: 'zerados', t: 'Candidato com zero votos', resumo: 'Todas as urnas em que um candidato recebeu votos e o outro nenhum, com o tipo de local e o 1º turno da mesma seção.',
+    v: () => ['conferir', `${fN(A.zerados.zero.total)} seções`] },
+  { g: 'Estatística', id: 'semorigem', t: 'Votos sem origem', resumo: 'O candidato ganhou mais votos do que havia disponível para ganhar entre os turnos.',
+    v: () => (A.semOrigem.total ? ['conferir', `${fN(A.semOrigem.total)} seções`] : ['ok', 'Nenhuma']) },
+  { g: 'Estatística', id: 'impressao', t: 'Impressão digital da eleição', resumo: 'Comparecimento × votos do candidato. Urnas "recheadas" deixam uma cauda no canto superior direito.',
+    v: () => ['info', `${fN(A.impressao.cauda.length)} na cauda`] },
+  { g: 'Estatística', id: 'modelourna', t: 'Modelo de urna', resumo: 'Urnas antigas votam diferente? Comparamos seções da mesma escola com modelos diferentes.',
+    v: () => { const mx = Math.max(...A.modeloUrna.tabela.filter((r) => r.secoesPareadas > 1000).map((r) => Math.abs(r.desvioPareado))); return mx < 0.5 ? ['ok', 'Sem efeito relevante'] : ['conferir', `até ${fP(mx, 2)}`]; } },
+  { g: 'Estatística', id: 'tardias', t: 'Urnas que chegaram tarde', resumo: 'As urnas da noite viraram o jogo por quê? Comparamos com o 1º turno das mesmas seções.', v: () => ['ok', 'Explicado'] },
+  { g: 'Estatística', id: 'digito', t: 'Último dígito', resumo: 'Números inventados repetem finais. Testamos se os dígitos finais dos votos seguem o padrão esperado.',
+    v: () => { const b = A.ultimoDigito.brasil; return Math.min(b.lula.p, b.flavio.p) > 0.01 ? ['ok', 'Padrão normal'] : ['conferir', 'Desvio']; } },
+  { g: 'Estatística', id: 'vizinhanca', t: 'Local × vizinhos', resumo: 'Escolas que votaram muito diferente das vizinhas num raio de 2 km, sem que isso viesse do 1º turno.',
+    v: () => (A.vizinhanca.total ? ['conferir', `${fN(A.vizinhanca.total)} locais`] : ['ok', 'Nenhum']) },
+  { g: 'Estatística', id: 'basicas', t: 'Empates, zerados e outros', resumo: 'As verificações simples: empates, candidato com zero votos, comparecimento alto e mais.', v: () => ['info', `${fN(ANOMS.length)} casos`] },
+  { g: 'Modelo e cadastro', id: 'modelo', t: 'Voto esperado por seção', resumo: 'Um modelo prevê o resultado de cada seção pelo 1º turno e pelo perfil do eleitorado. Marcamos as que fogem muito.',
+    v: () => (A.modelo.total ? ['conferir', `${fN(A.modelo.total)} seções`] : ['ok', 'Nenhuma']) },
+  { g: 'Sobre a auditoria', id: 'metodo', t: 'Metodologia e código', resumo: 'De onde vêm os dados, como cada verificação foi feita, o que não foi possível verificar e como reproduzir tudo.', v: () => ['info', 'Código aberto'] },
+  { g: 'Modelo e cadastro', id: 'censo', t: 'Eleitores × população', resumo: 'Municípios com mais eleitores do que moradores com idade para votar (Censo 2022).', v: () => ['info', `${fN(A.censo.acima1)} municípios`] },
+];
+
+async function carregarAnomalias() {
+  if (!A) {
+    try { A = await fetch('data/anomalias_avancadas.json').then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }); }
+    catch (e) { $('#anom-corpo').replaceChildren(h('div', { class: 'card pad' }, h('p', { style: `color:${CORES.bad}` }, 'Não foi possível carregar as análises. Recarregue a página.'))); return; }
+  }
+  menuAnomalias(); renderPagina();
+}
+function menuAnomalias() {
+  const el = $('#anom-menu'); el.replaceChildren(); let grupo = null;
+  for (const p of PAGINAS) {
+    if (p.g !== grupo) { grupo = p.g; el.append(h('h3', {}, grupo)); }
+    el.append(h('button', { type: 'button', 'aria-current': p.id === pagina ? 'page' : null, onclick: () => { pagina = p.id; menuAnomalias(); renderPagina(); window.scrollTo({ top: 0 }); } }, h('span', {}, p.t), p.id === 'resumo' ? null : pill(p.v())));
+  }
+}
+function cabecalhoPagina(p, ...explicacao) {
+  return h('div', { class: 'card pad' },
+    h('div', { class: 'row2', style: 'align-items:center' }, h('h2', { style: 'font-size:20px' }, p.t), pill(p.v())),
+    h('div', { class: 'explica' }, explicacao.map((t) => h('p', {}, t))));
+}
+function renderPagina() {
+  const el = $('#anom-corpo'); el.replaceChildren();
+  const p = PAGINAS.find((x) => x.id === pagina);
+  if (p.g.startsWith('Urnas')) {
+    const seg = h('div', { class: 'seg', role: 'group', 'aria-label': 'Turno auditado' });
+    [['2', '2º turno · 25/10'], ['1', '1º turno · 04/10']].forEach(([k, t]) => seg.append(h('button', { type: 'button', 'aria-pressed': turnoU === k ? 'true' : 'false', onclick: () => { turnoU = k; menuAnomalias(); renderPagina(); } }, t)));
+    el.append(h('div', { class: 'card pad', style: 'display:flex;gap:12px;align-items:center;flex-wrap:wrap' }, h('b', {}, 'Turno auditado'), seg, h('span', { class: 'note' }, 'Presidente. As mesmas verificações foram feitas nas urnas dos dois turnos.')));
+  }
+  (RENDER[pagina] || (() => {}))(el, p);
+}
+
+// tabela de casos com busca; cada linha leva ao município no mapa
+function tabelaCasos(tituloCard, linhas, cols, nota) {
+  const card = h('section', { class: 'card pad' }, h('h2', {}, tituloCard));
+  if (nota) card.append(h('p', { class: 'note' }, nota));
+  if (!linhas.length) { card.append(h('p', { class: 'muted' }, 'Nenhum caso.')); return card; }
+  const busca = h('input', { type: 'search', placeholder: 'Filtrar por município, UF ou local…', 'aria-label': 'Filtrar casos', style: 'width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 10px' });
+  const corpo = h('tbody'), info = h('p', { class: 'note' });
+  const render = () => {
+    const q = sem(busca.value.trim());
+    const f = linhas.filter((r) => !q || sem(`${r.nome || ''} ${r.uf} ${r.local || ''}`).includes(q));
+    info.textContent = f.length > 300 ? `Mostrando 300 de ${fN(f.length)}. Use o filtro para achar um caso.` : `${fN(f.length)} casos. Clique numa linha para ver o município no mapa.`;
+    corpo.replaceChildren(...f.slice(0, 300).map((r) => h('tr', { style: 'cursor:pointer', onclick: () => irCaso(r.uf, r.mun) }, cols.map((c) => h('td', { class: c.n ? 'n' : '' }, c.f(r))))));
+  };
+  busca.addEventListener('input', render);
+  card.append(busca, info, h('div', { class: 'scroll', style: 'max-height:520px' }, h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, cols.map((c) => h('th', { class: c.n ? 'n' : '' }, c.t)))), corpo)));
+  render(); return card;
+}
+const colLocal = { t: 'Onde', f: (r) => [h('div', { style: 'font-weight:600' }, `${titulo(r.nome || '')} · ${r.uf}`), h('div', { class: 'muted' }, `${r.zona != null ? 'Zona ' + r.zona : ''}${r.secao ? ' · seção ' + r.secao : ''}${r.local ? ' · ' + titulo(r.local) : ''}`)] };
+const kpi = (rotulo, valor, sub, cor) => h('div', { class: 'stat' }, h('span', {}, rotulo), h('b', { style: cor ? `color:${cor}` : '' }, valor), sub ? h('span', {}, sub) : null);
+const svg = (w, hh) => d3.create('svg').attr('class', 'chart').attr('viewBox', `0 0 ${w} ${hh}`).attr('role', 'img');
+
+const RENDER = {
+  resumo(el) {
+    el.append(h('div', { class: 'card pad' }, h('h2', { style: 'font-size:20px' }, 'Anomalias: o que verificamos'),
+      h('div', { class: 'explica' },
+        h('p', {}, 'Esta seção reúne todas as verificações feitas com os dados públicos do TSE: os arquivos de cada urna (boletim, registro digital de cada voto, log e assinaturas), os resultados por seção, o perfil do eleitorado e o Censo do IBGE.'),
+        h('p', {}, 'Uma anomalia é um ponto para conferir, não uma prova de fraude. Sempre que possível, comparamos o número encontrado com o que seria esperado por acaso.'))));
+    const g = h('div', { class: 'resumo-grid' });
+    for (const p of PAGINAS.slice(1)) g.append(h('button', { type: 'button', onclick: () => { pagina = p.id; menuAnomalias(); renderPagina(); window.scrollTo({ top: 0 }); } },
+      h('div', { class: 'row2', style: 'align-items:center' }, h('b', {}, p.t), pill(p.v())), h('span', { class: 'note' }, p.resumo)));
+    el.append(h('section', { class: 'card pad' }, g));
+  },
+
+  assinaturas(el, p) {
+    el.append(cabecalhoPagina(p, 'Ao fechar a votação, cada urna gera um manifesto com o hash (impressão digital criptográfica, SHA-512) de cada arquivo: boletim, registro digital do voto, log e imagem do boletim. O manifesto é assinado com a chave da própria urna.',
+      'Urnas novas (2020 e 2022) usam o esquema Ed521, padrão da ICP-Brasil; urnas antigas usam ECDSA P-521. Recalculamos todos os hashes e verificamos todas as assinaturas. Se um único bit de um arquivo tivesse sido alterado depois da urna assinar, a conferência falharia.',
+      'Limitação: conferimos a assinatura com o certificado que vem dentro do arquivo da urna, não a cadeia de certificados até a autoridade do TSE.'));
+    if (!U()) { el.append(h('div', { class: 'card pad' }, h('p', {}, 'A auditoria das urnas ainda está sendo processada.'))); return; }
+    const t = U().totais;
+    el.append(h('section', { class: 'card pad' }, h('div', { class: 'kpis' },
+      kpi('Urnas com assinatura verificada', fN(t.assinOk), `de ${fN(t.assinConferidas)}`, t.assinOk === t.assinConferidas ? CORES.ok : CORES.bad),
+      kpi('Esquema Ed521', fN(t.ed521), 'urnas 2020 e 2022'), kpi('Esquema ECDSA P-521', fN(t.ecdsa), 'urnas 2013 e 2015'),
+      kpi('Seções com hashes conferidos', fN(t.hashOk), `de ${fN(t.hashConferidos)}`, t.hashOk === t.hashConferidos ? CORES.ok : CORES.bad),
+      t.cadeiaConferidas != null ? kpi('Certificado emitido pelo TSE', fN(t.cadeiaOk), `de ${fN(t.cadeiaConferidas)} urnas`, t.cadeiaOk === t.cadeiaConferidas ? CORES.ok : CORES.bad) : null)));
+    if (t.porAC) el.append(h('section', { class: 'card pad' }, h('h2', {}, 'Quem emitiu o certificado de cada urna'),
+      h('div', { class: 'kpis' }, Object.entries(t.porAC).sort((a, b) => b[1] - a[1]).map(([ac, n]) => kpi(ac, fN(n), 'urnas'))),
+      h('div', { class: 'explica' },
+        h('p', {}, 'Conferimos que o certificado de cada urna foi assinado por uma das autoridades certificadoras intermediárias do TSE (AC URNA, AC UE2020 ou AC UE2022). Os certificados dessas autoridades vêm do pacote oficial de documentação dos arquivos de urna publicado pelo TSE.'),
+        h('p', {}, 'Não foi possível subir até a raiz (AC RAIZ UE e AC RAIZ UE v2): os certificados raiz não estão disponíveis publicamente. O endereço oficial (dpc.acue2020.tse.jus.br) bloqueia acesso de fora.'),
+        h('p', {}, 'Observação: o certificado da AC URNA, que emitiu os certificados das urnas modelos 2013 e 2015, tem validade até 18/07/2026, antes da eleição. Os certificados das urnas foram emitidos quando ela era válida e valem até 2030, e as assinaturas conferem matematicamente. Pela regra estrita do padrão X.509, porém, uma cadeia com autoridade vencida seria considerada expirada. É um ponto de manutenção da infraestrutura do TSE, não um indício de adulteração.'))));
+    const casos = U().casos.filter((c) => c[7].some(([tp]) => ['ASSINATURA_FALHA', 'HASH_FALHA', 'CADEIA_FALHA'].includes(tp))).map(urnaObj);
+    el.append(tabelaCasos('Falhas', casos, [colLocal, { t: 'Detalhe', f: (r) => r.det(['ASSINATURA_FALHA', 'HASH_FALHA', 'CADEIA_FALHA']) }]));
+  },
+
+  recontagem(el, p) {
+    el.append(cabecalhoPagina(p, 'O registro digital do voto (RDV) guarda cada voto individualmente, embaralhado para não revelar a ordem. Recontamos os votos para Presidente de cada urna e comparamos com o boletim de urna, que é o resultado impresso na seção, e com os números divulgados pelo TSE.',
+      'Se alguém tivesse alterado o resultado em qualquer ponto entre a urna e a divulgação, essas três fontes não bateriam.'));
+    if (!U()) { el.append(h('div', { class: 'card pad' }, h('p', {}, 'A auditoria das urnas ainda está sendo processada.'))); return; }
+    const t = U().totais;
+    el.append(h('section', { class: 'card pad' }, h('div', { class: 'kpis' },
+      kpi('Registro de votos = boletim', fN(t.rdvOk), `de ${fN(t.rdvConferidos)} urnas`, t.rdvOk === t.rdvConferidos ? CORES.ok : CORES.bad),
+      kpi('Boletim = dados do TSE', fN(t.buOk), `de ${fN(t.buConferidos)} urnas`, t.buOk === t.buConferidos ? CORES.ok : CORES.bad),
+      kpi('Seções em cédula de papel', fN(t.cedula || 0), 'exterior, sem urna eletrônica')),
+      h('p', { class: 'note' }, 'As seções em cédula não têm boletim eletrônico, registro de votos nem assinatura, por isso ficam fora desta conferência.')));
+    const casos = U().casos.filter((c) => c[7].some(([tp]) => tp === 'RDV_DIVERGE' || tp === 'BU_DIVERGE')).map(urnaObj);
+    el.append(tabelaCasos('Divergências', casos, [colLocal, { t: 'Detalhe', f: (r) => r.det(['RDV_DIVERGE', 'BU_DIVERGE']) }]));
+  },
+
+  biometria(el, p) {
+    el.append(cabecalhoPagina(p, 'O log de cada urna registra como cada eleitor foi liberado: pela digital, pela digitação de dados pelo mesário ou pela digital do próprio mesário, quando a do eleitor não é reconhecida.',
+      'Muitas liberações pelo mesário numa seção onde quase todos têm digital cadastrada é o padrão clássico de alguém votando no lugar de eleitores ausentes. Também pode ser só um leitor biométrico com defeito ou eleitores idosos com digital gasta, por isso é um ponto para conferir.'));
+    if (!U()) return;
+    const t = U().totais;
+    el.append(h('section', { class: 'card pad' }, h('div', { class: 'kpis' },
+      kpi('Votaram com a digital', fP(100 * t.bio / t.comp), `${fN(t.bio)} eleitores`),
+      kpi('Liberados pelo mesário', fP(100 * t.mesHab / t.comp), `${fN(t.mesHab)} eleitores`),
+      kpi('Sem biometria cadastrada', fP(100 * t.semBio / t.comp), `${fN(t.semBio)} eleitores`))));
+    el.append(graficoHoras());
+    const casos = U().casos.filter((c) => c[7].some(([tp]) => tp === 'LIBERACAO_MESARIO' || tp === 'BIOMETRIA_BAIXA')).map(urnaObj);
+    el.append(tabelaCasos('Seções para conferir', casos, [colLocal, { t: 'Votantes', n: 1, f: (r) => fN(r.comp) }, { t: 'O que chamou atenção', f: (r) => r.det(['LIBERACAO_MESARIO', 'BIOMETRIA_BAIXA']) }]));
+  },
+
+  ritmo(el, p) {
+    el.append(cabecalhoPagina(p, 'Pelo log, sabemos o segundo exato em que cada eleitor foi liberado e em que seu voto foi computado. Votar para Presidente leva, em geral, mais de 8 segundos.',
+      'Marcamos seções com 5 ou mais votos computados em até 3 segundos, sequências de 6 ou mais votos com menos de 15 segundos entre eles, votos mais de uma hora depois do encerramento (pode ser fila grande) e urnas ligadas várias vezes ou trocadas por urna de contingência.'));
+    if (!U()) return;
+    const c = U().contagem;
+    el.append(h('section', { class: 'card pad' }, h('div', { class: 'kpis' },
+      kpi('Votos rápidos demais', fN(c.VOTO_RAPIDO || 0), 'seções'), kpi('Rajadas de votos', fN(c.RAJADA || 0), 'seções'),
+      kpi('Votos muito tarde', fN(c.VOTO_TARDIO || 0), 'seções'), kpi('Urnas trocadas', fN(U().totais.contingencia), 'contingência'), kpi('Urna religada 3+ vezes', fN(c.REINICIOS || 0), 'seções'))));
+    const tipos = ['LOG_DIVERGE', 'VOTO_RAPIDO', 'RAJADA', 'VOTO_TARDIO', 'CONTINGENCIA', 'REINICIOS'];
+    const casos = U().casos.filter((x) => x[7].some(([tp]) => tipos.includes(tp))).map(urnaObj);
+    el.append(tabelaCasos('Seções', casos, [colLocal, { t: 'O que chamou atenção', f: (r) => r.det(tipos) }]));
+  },
+
+  alegacoes(el, p) {
+    const G = A.alegacoes;
+    const lnk = (href, txt) => h('a', { href, target: '_blank', rel: 'noopener', style: 'color:inherit;text-decoration:underline' }, txt);
+    el.append(cabecalhoPagina(p, 'Depois do 2º turno circularam várias alegações de fraude. Aqui cada uma é confrontada com os dados oficiais por seção do TSE e com a auditoria dos arquivos das urnas, ao lado do que as agências de checagem publicaram.',
+      'Um dado verdadeiro pode vir acompanhado de uma conclusão falsa. Por isso o veredito separa o número em si do que se concluiu a partir dele.'));
+    if (!G) return;
+    const cartao = (alegacao, veredito, dados, fontes) => h('section', { class: 'card pad' },
+      h('div', { class: 'row2', style: 'align-items:flex-start;gap:12px' }, h('h2', { style: 'font-size:16px' }, alegacao), pill(veredito)),
+      h('div', { class: 'explica' }, dados.map((d) => h('p', {}, d))),
+      fontes.length ? h('p', { class: 'note' }, 'Checagens e reportagens: ', fontes.flatMap(([u, t], i) => [i ? ' · ' : '', lnk(u, t)])) : null);
+    const n = fN, a = G.araruama, z = G.zerados, v = G.viradas, b = G.bahia, s = G.sc;
+    el.append(
+      cartao('"Em Araruama (RJ), Flávio teve 9 votos e Lula mais de 4 mil."', ['problema', 'Falso'],
+        [`Nos dados oficiais, Flávio venceu em Araruama com ${n(a.F)} votos contra ${n(a.L)} de Lula (no 1º turno, ${n(a.F1)} a ${n(a.L1)}).`,
+          `São ${n(a.secoes)} seções, e em nenhuma Flávio teve menos de ${n(a.minF)} votos.`], []),
+      cartao('"Flávio teve votação zerada em 106 urnas."', ['conferir', 'Número certo, conclusão errada'],
+        [`O número confere: ${n(z.flavio)} urnas, com ${n(z.lulaNelas)} votos de Lula, ${z.norte} no Norte e ${z.nordeste} no Nordeste. Lula também zerou em ${z.lula} urnas.`,
+          'Quase todas são aldeias indígenas e comunidades rurais pequenas que já votavam em bloco no 1º turno. O padrão aparece em eleições anteriores e não indica fraude. Veja a página "Candidato com zero votos".'],
+        [['https://revistaoeste.com/politica/flavio-teve-votacao-zerada-em-106-urnas/', 'Revista Oeste'], ['https://folhadepatrocinio.com/noticias/flavio-zerou-em-106-urnas/', 'Folha de Patrocínio']]),
+      cartao('"Lula virou 211 municípios onde Flávio tinha vencido no 1º turno."', ['conferir', 'Número certo, conclusão errada'],
+        [`Confere: ${n(v.lula)} municípios, entre eles ${v.exemplos.map((m) => titulo(m.mun)).join(', ')}. No sentido contrário houve ${v.flavio}.`,
+          'É o efeito esperado quando os eleitores dos candidatos eliminados no 1º turno migram mais para um lado. Em todos esses municípios os votos de cada urna batem com o boletim, com o registro digital do voto e com a assinatura digital.'], []),
+      cartao('"Lula ganhou 2 milhões de votos na Bahia depois que a votação foi prorrogada."', ['problema', 'Falso'],
+        [`Entre os turnos, Lula cresceu ${n(b.L - b.L1)} votos na Bahia (de ${n(b.L1)} para ${n(b.L)}), e não 2 milhões. Flávio também cresceu, de ${n(b.F1)} para ${n(b.F)}.`,
+          G.pos17 && G.pos17.porUF && G.pos17.porUF.BA != null ? `Pelos logs das urnas baianas, ${n(G.pos17.porUF.BA)} votos foram computados a partir das 17h, incluindo eleitores que já estavam na fila no horário de encerramento.` : 'A contagem dos votos depois das 17h pelos logs das urnas ainda está sendo processada.'],
+        [['https://www.agencialupa.org/eleicoes/2026/10/28/e-falso-que-lula-ganhou-2-milhoes-de-votos-na-bahia-apos-decisao-do-stf/', 'Lupa']]),
+      cartao('"Os votos depois das 17h decidiram a eleição."', ['problema', 'Falso'],
+        [G.pos17 ? `Contando direto nos logs de todas as urnas: ${n(G.pos17.total)} votos foram computados a partir das 17h de Brasília, ${n(G.pos17.apos18)} a partir das 18h e ${n(G.pos17.apos19)} a partir das 19h, em ${n(G.pos17.secoes)} seções. O TSE divulgou 34.393.` : 'O TSE divulgou 34.393 votos computados depois das 17h.',
+          `A diferença entre os candidatos foi de ${n(G.margem)} votos. Mesmo que todos os votos depois das 17h tivessem ido para o outro lado, o resultado não mudaria. A prorrogação foi pedida pelas duas campanhas, e quem já está na fila às 17h tem direito de votar.`],
+        [['https://www.aosfatos.org/noticias/votos-registrados-apos-as-17h-nao-mudam-resultado-das-eleicoes/', 'Aos Fatos'], ['https://www.aosfatos.org/noticias/derrotado-flavio-mente-sugerir-eleicao-fraudada/', 'Aos Fatos'], ['https://www.gizmodo.com.br/flavio-bolsonaro-denuncia-fraude-nas-eleicoes-mas-documentos-e-numeros-do-tse-contradizem-acusacoes-72928', 'Gizmodo']]),
+      cartao('"Flávio perdeu votos em Santa Catarina no 2º turno."', ['problema', 'Falso'],
+        [`Flávio ganhou ${n(s.F - s.F1)} votos em Santa Catarina (de ${n(s.F1)} para ${n(s.F)}). Lula também cresceu, de ${n(s.L1)} para ${n(s.L)}.`],
+        [['https://www.agencialupa.org/noticias/2026/10/27/e-falso-que-flavio-bolsonaro-perdeu-votos-em-sc-no-segundo-turno/', 'Lupa']]),
+      cartao('"As urnas antigas (modelos 2013 e 2015) deram resultado diferente."', ['ok', 'Não se sustenta'],
+        ['Comparando seções da mesma escola que usaram modelos diferentes, a diferença fica perto de zero em todos os modelos (no máximo 0,14 ponto percentual). A diferença que aparece na comparação bruta vem de onde cada modelo foi instalado. Veja a página "Modelo de urna".'],
+        [['https://www.agencialupa.org/jornalismo/2026/10/04/urnas-eletronicas-voltam-a-ser-alvo-de-desinformacao-em-2026/', 'Lupa']]),
+      h('section', { class: 'card pad' }, h('h2', {}, 'Verificações oficiais do TSE'),
+        h('p', { class: 'explica' }, 'O teste de integridade do 2º turno (votação paralela com cédulas em urnas sorteadas) não encontrou divergência entre os votos em papel e os registrados nas urnas. O TSE também desmentiu que fiscais do PL tenham sido retirados da sala-cofre.'),
+        h('p', { class: 'note' }, lnk('https://www.tse.jus.br/comunicacao/noticias/2026/Outubro/teste-de-integridade-do-2o-turno-no-tse-confirma-correspondencia-entre-cedulas-e-votos-nas-urnas', 'TSE: teste de integridade'), ' · ', lnk('https://www.poder360.com.br/poder-eleicoes-2026/tse-nega-fraude-e-diz-que-pausa-na-divulgacao-nao-alterou-votos/', 'Poder360'))));
+  },
+
+  metodo(el, p) {
+    const REPO = 'https://github.com/programacaotoic/auditoria-presidente-2026';
+    const lnk = (href, txt) => h('a', { href, target: '_blank', rel: 'noopener', style: 'color:inherit;text-decoration:underline' }, txt);
+    const sec = (titulo, ...itens) => h('section', { class: 'card pad' }, h('h2', {}, titulo), h('div', { class: 'explica' }, itens.map((x) => (typeof x === 'string' ? h('p', {}, x) : x))));
+    const lista = (itens) => h('ul', { style: 'margin:0;padding-left:1.2rem;display:grid;gap:4px' }, itens.map((x) => h('li', {}, x)));
+    el.append(cabecalhoPagina(p, 'Esta auditoria foi feita só com dados públicos, por scripts em JavaScript (Node.js) que qualquer pessoa pode rodar. Todo o código, os certificados usados e os resultados intermediários estão no repositório público.'),
+      h('section', { class: 'card pad' }, h('div', { class: 'row2', style: 'flex-wrap:wrap;align-items:center' }, h('b', {}, 'Repositório com código e dados'), lnk(REPO, REPO.replace('https://', '')))),
+      sec('Fontes',
+        lista([
+          [lnk('https://dadosabertos.tse.jus.br/', 'Portal de dados abertos do TSE'), ': votação por seção, detalhe por seção (aptos, comparecimento, brancos, nulos, horário do boletim, modelo da urna), locais de votação com coordenadas e perfil do eleitorado por seção.'],
+          ['Arquivos de urna do TSE (cdn.tse.jus.br, pasta arqurnatot): boletim de urna, registro digital do voto, log e assinaturas de cada uma das 499 mil urnas, nos dois turnos. Cerca de 250 GB, lidos em fluxo sem gravar em disco.'],
+          [lnk('https://servicodados.ibge.gov.br/api/docs/malhas', 'IBGE'), ': malha municipal e estadual, e população por idade do Censo 2022 (tabela 9514 do SIDRA).'],
+          [lnk('https://repositorio.iti.gov.br/instrucoes-normativas/IN2018_15_DOC-ICP-01.01.htm', 'Instrução Normativa ITI nº 15/2018'), ': parâmetros da curva E-521 e do esquema de assinatura Ed521 usados pelas urnas novas.'],
+          ['Certificados das autoridades intermediárias (AC URNA, AC UE2020, AC UE2022): constante oficial do pacote de documentação dos arquivos de urna do TSE, conferida byte a byte com a cópia mantida pelo projeto ', lnk('https://github.com/alissonlinneker/DataUrnas-BR', 'DataUrnas-BR'), '.'],
+        ])),
+      sec('O que foi verificado em cada urna',
+        lista([
+          'Hash SHA-512 de cada arquivo (boletim, registro de votos, imagem do boletim e log) comparado com o manifesto da urna.',
+          'Assinatura digital do manifesto: Ed521 (urnas 2020 e 2022) ou ECDSA P-521 (urnas 2013 e 2015). A urna assina SHA-512 do hash do manifesto.',
+          'Certificado da urna emitido por uma das autoridades intermediárias do TSE.',
+          'Recontagem voto a voto pelo registro digital do voto, comparada com o boletim e com o total divulgado pelo TSE.',
+          'Log: forma de liberação de cada eleitor, tempo entre liberação e voto, sequências rápidas, votos fora de hora, religamentos e troca por urna de contingência. Logs embutidos (urna original e cópias) são lidos e as linhas repetidas contadas uma vez.',
+        ])),
+      sec('O que não foi possível verificar',
+        lista([
+          'A cadeia de certificados até a raiz: os certificados AC RAIZ UE e AC RAIZ UE v2 não estão públicos.',
+          'Se o software da urna estava correto antes de assinar. Isso depende dos testes públicos de segurança, da cerimônia de lacração e da votação paralela do TSE, que não fazem parte destes dados.',
+          'Comparação com boletins impressos fotografados nas seções: não existe base pública dessas fotos.',
+          'As 29 seções do exterior que votaram em cédula de papel, que não têm arquivos de urna.',
+        ])),
+      sec('Erros encontrados e corrigidos durante o trabalho',
+        'Transparência sobre o processo: estes erros foram meus e foram corrigidos antes da versão publicada. Eles aparecem aqui porque ajudam a avaliar a confiabilidade do resultado.',
+        lista([
+          'Leitura do boletim confundia o município "Presidente Figueiredo" com o bloco do cargo de Presidente.',
+          'Logs com cópias embutidas eram contados duas vezes, inflando votos rápidos e rajadas.',
+          'A tabela pública que liga códigos do TSE aos do IBGE tinha 7 municípios trocados (5 na Bahia, 2 em Santa Catarina).',
+          'O teste do último dígito comparava com 10% por dígito, o que acusaria fraude falsamente. Foi trocado pelo padrão esperado da própria distribuição.',
+        ])),
+      sec('Como reproduzir',
+        'Com Node.js 20 ou mais recente e cerca de 30 GB de disco livre, a ordem dos scripts está no README do repositório. A auditoria dos arquivos de urna leva cerca de uma hora por turno com quatro processos em paralelo.'));
+  },
+
+  especiais(el, p) {
+    const E = A.especiais;
+    el.append(cabecalhoPagina(p, 'O TSE classifica cada seção por tipo de local. Além das convencionais, há seções em estabelecimentos penais e unidades de internação de adolescentes ("preso provisório"), seções de voto em trânsito, para quem está fora do domicílio eleitoral, e seções temporárias.',
+      'Nos presídios votam apenas presos provisórios, que ainda não têm condenação definitiva, e adolescentes internados com 16 anos ou mais. Presos condenados ficam com os direitos políticos suspensos. Por isso essas seções são pequenas e mudam bastante entre os turnos, conforme presos são soltos ou transferidos.'));
+    let t = 3;
+    const seg = h('div', { class: 'seg', role: 'group', 'aria-label': 'Tipo de seção' });
+    const corpo = h('div', { style: 'display:grid;gap:12px' });
+    const shr = (a) => a.L / (a.L + a.F), shr1 = (a) => a.L1 / (a.L1 + a.F1);
+    const render = () => {
+      seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.k === t));
+      const a = E.totais[t], c = E.totais[1];
+      const linha = (rot, x) => h('tr', {}, h('td', { style: 'font-weight:600' }, rot), h('td', { class: 'n' }, fN(x.secoes)), h('td', { class: 'n' }, fN(x.aptos)),
+        h('td', { class: 'n l-c' }, fP(100 * shr(x))), h('td', { class: 'n f-c' }, fP(100 * (1 - shr(x)))), h('td', { class: 'n' }, fP(100 * shr1(x))),
+        h('td', { class: 'n' }, `${fP(100 * x.comp1 / x.aptos1)} → ${fP(100 * x.comp / x.aptos)}`), h('td', { class: 'n' }, fP(100 * x.bn / x.comp)));
+      const cab = h('thead', {}, h('tr', {}, ['', 'Seções', 'Eleitores aptos', 'Lula', 'Flávio', 'Lula no 1º turno*', 'Comparecimento 1º → 2º', 'Brancos + nulos'].map((x, i) => h('th', { class: i ? 'n' : '' }, x))));
+      const ufs = E.porUF.filter((x) => x.tipo === t).sort((p1, p2) => p2.aptos - p1.aptos);
+      const tabUF = h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, ['Estado', 'Seções', 'Eleitores', 'Lula', 'Flávio', 'Lula no 1º turno*', 'Comparecimento'].map((x, i) => h('th', { class: i ? 'n' : '' }, x)))),
+        h('tbody', {}, ufs.map((x) => h('tr', {}, h('td', {}, NOMES[x.uf] || x.uf), h('td', { class: 'n' }, fN(x.secoes)), h('td', { class: 'n' }, fN(x.aptos)),
+          h('td', { class: 'n l-c' }, fP(100 * shr(x))), h('td', { class: 'n f-c' }, fP(100 * (1 - shr(x)))), h('td', { class: 'n' }, fP(100 * shr1(x))), h('td', { class: 'n' }, fP(100 * x.comp / x.aptos))))));
+      const casos = E.casos.filter((x) => x.tipo === t).sort((p1, p2) => p2.aptos - p1.aptos);
+      corpo.replaceChildren(
+        h('section', { class: 'card pad' }, h('h2', {}, `${E.nomes[t]} × seções convencionais`),
+          h('div', { class: 'scroll' }, h('table', { class: 'tbl' }, cab, h('tbody', {}, linha(E.nomes[t], a), linha('Convencional (resto do país)', c)))),
+          h('p', { class: 'note' }, '* Percentual de Lula entre os votos dos dois candidatos no 1º turno, nas mesmas seções. Se for parecido com o do 2º turno, o voto ali foi estável.')),
+        h('section', { class: 'card pad' }, h('h2', {}, 'Por estado'), h('div', { class: 'scroll' }, tabUF)),
+        tabelaCasos(`Cada seção (${fN(casos.length)})`, casos, [colLocal,
+          { t: 'Lula × Flávio', n: 1, f: (r) => h('span', {}, h('span', { class: 'l-c' }, fN(r.L)), ' × ', h('span', { class: 'f-c' }, fN(r.F))) },
+          { t: '1º turno (L × F × outros)', n: 1, f: (r) => `${fN(r.L1)} × ${fN(r.F1)} × ${fN(r.O1)}` },
+          { t: 'Comparecimento', n: 1, f: (r) => `${r.comp} de ${r.aptos} (${fP(r.aptos ? 100 * r.comp / r.aptos : null, 0)})` }],
+          'Ordenado pelo número de eleitores aptos. Clique para ver o município no mapa.'));
+    };
+    [[3, 'Presídios e internação'], [2, 'Voto em trânsito'], [4, 'Temporárias']].forEach(([k, txt]) => seg.append(h('button', { type: 'button', 'data-k': k, onclick: () => { t = k; render(); } }, `${txt} (${fN(E.totais[k].secoes)})`)));
+    el.append(h('section', { class: 'card pad' }, seg), corpo);
+    render();
+  },
+
+  zerados(el, p) {
+    const Z = A.zerados;
+    el.append(cabecalhoPagina(p, `Encontramos ${fN(Z.zero.total)} urnas em que um candidato teve votos e o outro teve zero: em ${fN(Z.zero.flavioZerado)} o zerado foi Flávio e em ${fN(Z.zero.lulaZerado)}, Lula. Com quase meio milhão de urnas, o acaso sozinho produziria cerca de 42 casos com 30 votos ou mais, então há mais do que o acaso explica.`,
+      `A explicação aparece no tipo de local e no 1º turno. São quase sempre aldeias indígenas e comunidades rurais pequenas, que votam em bloco. Em ${fN(Z.zero.mesmo1t)} dos ${fN(Z.zero.total)} casos, o mesmo candidato já tinha menos de 5% dos votos daquela urna no 1º turno. Um zero que aparece de repente, sem histórico no 1º turno e numa escola comum de cidade, é o que mais merece conferência.`));
+    let faixa = 'zero', quem = '', tipo = '';
+    const seg = (itens, get, set) => { const s = h('div', { class: 'seg', role: 'group' }); itens.forEach(([k, t]) => s.append(h('button', { type: 'button', 'data-k': k, onclick: () => { set(k); render(); } }, t))); s.sync = () => s.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.k === get())); return s; };
+    const sFaixa = seg([['zero', `0 votos (${fN(Z.zero.total)})`], ['quase', `1 a 9 votos (${fN(Z.quase.total)})`]], () => faixa, (k) => { faixa = k; tipo = ''; });
+    const sQuem = seg([['', 'Ambos'], ['Flávio', 'Flávio zerado'], ['Lula', 'Lula zerado']], () => quem, (k) => { quem = k; });
+    const resumoBox = h('div'), lista = h('div');
+    const tipoNota = (r) => (r.perdedor1t == null ? '' : r.perdedor1t < 5 ? 'já era assim no 1º turno' : 'mudou desde o 1º turno');
+    const render = () => {
+      sFaixa.sync(); sQuem.sync();
+      const base = Z[faixa], casos = base.casos.filter((r) => (!quem || r.perdedor === quem) && (!tipo || r.tipo === tipo));
+      const tipos = Object.entries(base.porTipo).sort((a, b) => b[1] - a[1]);
+      const mx = d3.max(tipos, (t) => t[1]);
+      resumoBox.replaceChildren(h('div', { class: 'kpis' },
+        kpi('Seções', fN(base.total), faixa === 'zero' ? 'um candidato com 0 votos' : 'um candidato com 1 a 9 votos (100+ válidos)'),
+        kpi('Flávio zerado', fN(base.flavioZerado), null, CORES.flavio), kpi('Lula zerado', fN(base.lulaZerado), null, CORES.lula),
+        kpi('Mesmo padrão no 1º turno', fP(100 * base.mesmo1t / base.total, 0), `${fN(base.mesmo1t)} seções`, CORES.ok)),
+        h('h3', { style: 'margin-top:12px' }, 'Por tipo de local (clique para filtrar)'),
+        h('div', { class: 'list' }, tipos.map(([t, n]) => h('button', { type: 'button', class: 'cmp', 'aria-pressed': tipo === t ? 'true' : 'false', style: tipo === t ? 'background:var(--panel2)' : '', onclick: () => { tipo = tipo === t ? '' : t; render(); } },
+          h('span', {}, t), h('span', { class: 'num' }, fN(n)), h('span', { class: 'bars' }, h('i', { style: `width:${(n / mx) * 100}%;background:${CORES.warn}` }))))));
+      lista.replaceChildren(tabelaCasos(`${fN(casos.length)} seções${tipo ? ' · ' + tipo : ''}${quem ? ' · ' + quem + ' zerado' : ''}`, casos, [colLocal,
+        { t: 'Tipo de local', f: (r) => r.tipo },
+        { t: 'Resultado (Lula × Flávio)', n: 1, f: (r) => h('span', {}, h('span', { class: 'l-c' }, fN(r.L)), ' × ', h('span', { class: 'f-c' }, fN(r.F))) },
+        { t: '1º turno (Lula × Flávio × outros)', n: 1, f: (r) => [h('div', {}, `${fN(r.L1)} × ${fN(r.F1)} × ${fN(r.O1)}`), h('div', { class: 'muted', style: `color:${r.perdedor1t != null && r.perdedor1t >= 5 ? CORES.warn : ''}` }, tipoNota(r))] },
+        { t: 'Comparecimento', n: 1, f: (r) => `${fP(100 * r.comp / r.aptos, 0)} de ${fN(r.aptos)}` }],
+        'Ordenado pelo número de votos válidos. Em laranja, casos em que o padrão não existia no 1º turno: são os que mais merecem conferência.'));
+    };
+    el.append(h('section', { class: 'card pad' }, h('div', { class: 'row2', style: 'flex-wrap:wrap' }, sFaixa, sQuem), resumoBox,
+      h('button', { type: 'button', class: 'icon-btn', style: 'justify-self:start', onclick: () => { mostrarVista('resultado'); S.tipoAnom = 'ZERO_VOTOS'; definirCamada('anomalias'); } }, 'Ver todas no mapa →')), lista);
+    render();
+  },
+
+  semorigem(el, p) {
+    el.append(cabecalhoPagina(p, 'Entre os turnos, um candidato só pode ganhar votos de quem votou em outros candidatos, de quem anulou ou votou em branco, de quem não tinha votado no 1º turno ou de eleitores do adversário que mudaram de lado.',
+      'Marcamos seções onde o ganho só se explica se mais de 10% dos eleitores do adversário tiverem mudado de voto. Isso é possível, mas raro. Em comunidades pequenas e muito unidas, como aldeias, acontece quando a liderança local muda de apoio.'));
+    el.append(tabelaCasos(`${fN(A.semOrigem.total)} seções de ${fN(A.semOrigem.avaliadas)} avaliadas`, A.semOrigem.casos, [colLocal,
+      { t: 'Quem ganhou', f: (r) => h('span', { class: r.quem === 'Lula' ? 'l-c' : 'f-c' }, r.quem) },
+      { t: '1º turno (L / F / outros / br+nu)', n: 1, f: (r) => `${r.L1} / ${r.F1} / ${r.O1} / ${r.bn1}` },
+      { t: '2º turno (L / F)', n: 1, f: (r) => `${r.L} / ${r.F}` },
+      { t: 'Precisaria trocar de lado', n: 1, f: (r) => `${r.trocas} (${fP(r.perc, 0)} do adversário)` }]));
+  },
+
+  impressao(el, p) {
+    el.append(cabecalhoPagina(p, 'Cada seção é um ponto: na horizontal, o comparecimento; na vertical, o percentual de votos do candidato. Em eleições normais, os pontos formam manchas arredondadas.',
+      'Quando há urnas "recheadas" (votos inseridos no lugar de ausentes), aparece uma cauda esticada em direção ao canto de 100% de comparecimento e 100% para um candidato. O método é de Klimek et al. (PNAS, 2012), usado em estudos sobre Rússia e Uganda.'));
+    const card = h('section', { class: 'card pad' });
+    let reg = 'BR', cand = 'L';
+    const seg1 = h('div', { class: 'seg', role: 'group', 'aria-label': 'Região' }), seg2 = h('div', { class: 'seg', role: 'group', 'aria-label': 'Candidato' });
+    const cv = h('canvas', { class: 'heat', width: A.impressao.N, height: A.impressao.N, 'aria-label': 'Mapa de calor de comparecimento por percentual do candidato' });
+    const desenha = () => {
+      const N = A.impressao.N, g = A.impressao.grades[reg][cand], c = cv.getContext('2d'), img = c.createImageData(N, N);
+      const mx = Math.log(1 + Math.max(...g)), cor = d3.color(cand === 'L' ? CORES.lula : CORES.flavio), base = d3.color(CORES.panel2);
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+        const v = g[y * N + x], k = v ? 0.15 + 0.85 * Math.log(1 + v) / mx : 0, o = ((N - 1 - y) * N + x) * 4;
+        img.data[o] = base.r + (cor.r - base.r) * k; img.data[o + 1] = base.g + (cor.g - base.g) * k; img.data[o + 2] = base.b + (cor.b - base.b) * k; img.data[o + 3] = 255;
+      }
+      c.putImageData(img, 0, 0);
+      seg1.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.k === reg));
+      seg2.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.k === cand));
+    };
+    [['BR', 'Brasil'], ['N', 'Norte'], ['NE', 'Nordeste'], ['CO', 'Centro-Oeste'], ['SE', 'Sudeste'], ['S', 'Sul']].forEach(([k, t]) => seg1.append(h('button', { type: 'button', 'data-k': k, onclick: () => { reg = k; desenha(); } }, t)));
+    [['L', 'Lula'], ['F', 'Flávio']].forEach(([k, t]) => seg2.append(h('button', { type: 'button', 'data-k': k, onclick: () => { cand = k; desenha(); } }, t)));
+    card.append(h('div', { class: 'row2', style: 'flex-wrap:wrap' }, seg1, seg2),
+      h('div', { style: 'display:grid;grid-template-columns:auto 1fr;gap:6px;align-items:center;max-width:560px' },
+        h('div', { class: 'note', style: 'writing-mode:vertical-rl;transform:rotate(180deg);text-align:center' }, '% de votos do candidato (0 → 100%)'),
+        h('div', {}, cv, h('div', { class: 'row2 note' }, h('span', {}, '0%'), h('span', {}, 'comparecimento'), h('span', {}, '100%')))),
+      h('p', { class: 'note' }, 'Cor mais forte: mais seções naquele ponto (escala logarítmica). Os quadrados vazios no canto superior direito indicam ausência de cauda.'));
+    el.append(card); desenha();
+    el.append(tabelaCasos('Seções na cauda: comparecimento ≥ 95% e ≥ 90% para um candidato', A.impressao.cauda, [colLocal,
+      { t: 'Comparecimento', n: 1, f: (r) => `${fP(r.comparecimento)} (${r.comp}/${r.aptos})` }, { t: 'Líder', f: (r) => `${r.lider} ${fP(r.perc)}` }],
+      'Muitas são aldeias e comunidades pequenas, onde comparecimento alto e voto unânime são comuns.'));
+  },
+
+  modelourna(el, p) {
+    el.append(cabecalhoPagina(p, 'Uma alegação comum é que urnas de modelos antigos dão resultados diferentes. Na comparação bruta, parece verdade, mas modelos antigos ficam concentrados em certas regiões, que já votam diferente.',
+      'A comparação justa olha só para escolas que tinham urnas de modelos diferentes ao mesmo tempo e mede quanto cada seção se afasta da média da própria escola. Se o modelo não influencia, essa diferença fica perto de zero.'));
+    const tab = A.modeloUrna.tabela;
+    const W = 620, H = 60 + tab.length * 46, m = { l: 90, r: 30 };
+    const s = svg(W, H); const ext = Math.max(0.6, ...tab.map((r) => Math.abs(r.desvioPareado || 0) + (r.ic95 || 0)));
+    const x = d3.scaleLinear([-ext, ext], [m.l, W - m.r]);
+    s.append('line').attr('x1', x(0)).attr('x2', x(0)).attr('y1', 20).attr('y2', H - 20).attr('stroke', CORES.muted).attr('stroke-dasharray', '3 3');
+    s.append('text').attr('x', x(0)).attr('y', 14).attr('text-anchor', 'middle').text('nenhuma diferença');
+    tab.forEach((r, i) => {
+      const y = 44 + i * 46;
+      s.append('text').attr('x', m.l - 10).attr('y', y).attr('dy', '0.32em').attr('text-anchor', 'end').style('fill', CORES.fg).style('font-weight', 600).text(r.modelo);
+      if (r.desvioPareado == null) return;
+      s.append('line').attr('x1', x(r.desvioPareado - r.ic95)).attr('x2', x(r.desvioPareado + r.ic95)).attr('y1', y).attr('y2', y).attr('stroke', CORES.fg).attr('stroke-width', 2);
+      s.append('circle').attr('cx', x(r.desvioPareado)).attr('cy', y).attr('r', 5).attr('fill', CORES.lula);
+      s.append('text').attr('x', x(r.desvioPareado)).attr('y', y + 18).attr('text-anchor', 'middle').text(`${r.desvioPareado >= 0 ? '+' : ''}${String(r.desvioPareado).replace('.', ',')} p.p. ± ${String(r.ic95).replace('.', ',')}`);
+    });
+    s.append('text').attr('x', m.l).attr('y', H - 4).text('← menos Lula que a média da escola'); s.append('text').attr('x', W - m.r).attr('y', H - 4).attr('text-anchor', 'end').text('mais Lula que a média da escola →');
+    el.append(h('section', { class: 'card pad' }, h('h2', {}, 'Diferença para a média da própria escola (pontos percentuais de Lula)'), s.node(),
+      h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, 'Modelo'), h('th', { class: 'n' }, 'Seções'), h('th', { class: 'n' }, 'Lula (comparação bruta)'), h('th', { class: 'n' }, 'Seções na comparação justa'), h('th', { class: 'n' }, 'Diferença justa'))),
+        h('tbody', {}, tab.map((r) => h('tr', {}, h('td', {}, r.modelo), h('td', { class: 'n' }, fN(r.secoes)), h('td', { class: 'n' }, fP(r.lulaBruto)), h('td', { class: 'n' }, fN(r.secoesPareadas)), h('td', { class: 'n' }, r.desvioPareado == null ? '–' : `${r.desvioPareado >= 0 ? '+' : ''}${String(r.desvioPareado).replace('.', ',')} p.p.`))))),
+      h('p', { class: 'note' }, `Comparação feita em ${fN(A.modeloUrna.locaisComparados)} escolas com mais de um modelo de urna. A barra é o intervalo de 95% de confiança.`)));
+  },
+
+  tardias(el, p) {
+    el.append(cabecalhoPagina(p, 'Durante a apuração, Flávio liderou e depois Lula virou. Isso só quer dizer que as urnas que chegaram mais tarde vinham de lugares que votam mais em Lula, como o Nordeste e o interior?',
+      'Para testar, comparamos as mesmas seções no 1º turno. Se as urnas tardias simplesmente vêm de lugares mais "lulistas", elas também eram mais lulistas no 1º turno, e a variação entre os turnos fica parecida ao longo da noite.'));
+    const d = A.tardias.filter((r) => r.secoes >= 200);
+    const W = 640, H = 260, m = { l: 40, r: 16, t: 14, b: 34 };
+    const s = svg(W, H); const x = d3.scalePoint(d.map((r) => r.hora), [m.l, W - m.r]);
+    const y = d3.scaleLinear([d3.min(d, (r) => Math.min(r.lula1t, r.lula2t)) - 3, d3.max(d, (r) => Math.max(r.lula1t, r.lula2t)) + 3], [H - m.b, m.t]);
+    y.ticks(5).forEach((v) => { s.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(v)).attr('y2', y(v)).attr('stroke', CORES.line); s.append('text').attr('x', m.l - 6).attr('y', y(v)).attr('dy', '0.32em').attr('text-anchor', 'end').text(v + '%'); });
+    d.forEach((r, i) => { if (i % 2 === 0) s.append('text').attr('x', x(r.hora)).attr('y', H - 14).attr('text-anchor', 'middle').text(r.hora); });
+    const linha = (k, cor, tr) => s.append('path').attr('d', d3.line().x((r) => x(r.hora)).y((r) => y(r[k]))(d)).attr('fill', 'none').attr('stroke', cor).attr('stroke-width', 2.5).attr('stroke-dasharray', tr ? '5 4' : null);
+    linha('lula2t', CORES.lula); linha('lula1t', CORES.muted, true);
+    el.append(h('section', { class: 'card pad' }, h('h2', {}, 'Percentual de Lula (entre os dois) nas urnas que chegaram em cada horário'), s.node(),
+      h('div', { class: 'legend', style: 'position:static' }, h('div', {}, h('i', { class: 'dot', style: `background:${CORES.lula}` }), ' 2º turno · ', h('i', { class: 'dot', style: `background:${CORES.muted}` }), ' as mesmas seções no 1º turno (Lula ÷ Lula + Flávio)')),
+      h('p', { class: 'note' }, 'As duas linhas sobem juntas ao longo da noite: as seções que chegaram tarde já eram mais favoráveis a Lula no 1º turno. A distância entre elas (variação entre turnos) fica estável, então a virada se explica pela ordem de chegada das urnas, não por um comportamento diferente delas.'),
+      h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, 'Horário'), h('th', { class: 'n' }, 'Urnas'), h('th', { class: 'n' }, 'Lula 1º turno'), h('th', { class: 'n' }, 'Lula 2º turno'), h('th', { class: 'n' }, 'Variação'))),
+        h('tbody', {}, d.map((r) => h('tr', {}, h('td', {}, r.hora), h('td', { class: 'n' }, fN(r.secoes)), h('td', { class: 'n' }, fP(r.lula1t)), h('td', { class: 'n' }, fP(r.lula2t)), h('td', { class: 'n' }, `${r.variacao >= 0 ? '+' : ''}${String(r.variacao).replace('.', ',')} p.p.`)))))));
+  },
+
+  digito(el, p) {
+    el.append(cabecalhoPagina(p, 'Quando pessoas inventam números, tendem a repetir certos finais. Em totais reais acima de 100 votos, o último dígito segue um padrão previsível.',
+      'Cuidado com uma armadilha comum: o padrão esperado não é exatamente 10% para cada dígito. Como há menos seções com 300 votos do que com 150, os finais menores aparecem um pouco mais. O teste ingênuo, que compara com 10%, "acusa fraude" com p = 0; o teste correto compara com o padrão que a própria distribuição dos dados produz. O comparecimento, cuja distribuição é larga, sai uniforme nos dois testes, o que confirma o efeito.'));
+    const b = A.ultimoDigito.brasil;
+    const W = 640, H = 230, m = { l: 40, r: 10, t: 16, b: 30 };
+    const s = svg(W, H); const series = [['lula', CORES.lula, 'Lula'], ['flavio', CORES.flavio, 'Flávio'], ['comparecimento', CORES.muted, 'Comparecimento']];
+    const dev = (k, i) => 100 * (b[k].contagem[i] / b[k].esperado[i] - 1);
+    const ext = Math.max(1.5, ...series.flatMap(([k]) => d3.range(10).map((i) => Math.abs(dev(k, i)))));
+    const x = d3.scaleBand(d3.range(10), [m.l, W - m.r]).padding(0.25), xs = d3.scaleBand(series.map((s) => s[0]), [0, x.bandwidth()]).padding(0.1);
+    const y = d3.scaleLinear([-ext, ext], [H - m.b, m.t]);
+    [-1, 0, 1].map((v) => v * Math.round(ext)).forEach((v) => { s.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(v)).attr('y2', y(v)).attr('stroke', v ? CORES.line : CORES.muted); s.append('text').attr('x', m.l - 6).attr('y', y(v)).attr('dy', '0.32em').attr('text-anchor', 'end').text((v > 0 ? '+' : '') + v + '%'); });
+    d3.range(10).forEach((i) => {
+      s.append('text').attr('x', x(i) + x.bandwidth() / 2).attr('y', H - 10).attr('text-anchor', 'middle').text('final ' + i);
+      series.forEach(([k, cor]) => { const v = dev(k, i); s.append('rect').attr('x', x(i) + xs(k)).attr('width', xs.bandwidth()).attr('y', y(Math.max(0, v))).attr('height', Math.abs(y(v) - y(0))).attr('fill', cor).attr('rx', 1.5); });
+    });
+    el.append(h('section', { class: 'card pad' }, h('h2', {}, 'Diferença entre observado e esperado, por dígito final (Brasil)'), s.node(),
+      h('div', { class: 'kpis' }, series.map(([k, cor, t]) => kpi(t, `p = ${String(b[k].p).replace('.', ',')}`, `${fN(b[k].n)} seções · qui² ${String(b[k].qui2).replace('.', ',')}`, b[k].p > 0.01 ? CORES.ok : CORES.warn))),
+      h('p', { class: 'note' }, 'p acima de 0,05 significa que o padrão é compatível com dados reais. Desvios de ±1% são ruído normal com 350 mil seções.')));
+    const uf = A.ultimoDigito.porUF;
+    const ps = uf.flatMap((r) => [r.lula.p, r.flavio.p]);
+    const celP = (v) => h('td', { class: 'n', style: v < 0.01 ? `color:${CORES.warn}` : '' }, String(v).replace('.', ','));
+    const linhasUf = uf.map((r) => h('tr', {}, h('td', {}, NOMES[r.uf] || r.uf), celP(r.lula.p), celP(r.flavio.p)));
+    const tabUf = h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, 'UF'), h('th', { class: 'n' }, 'p Lula'), h('th', { class: 'n' }, 'p Flávio'))), h('tbody', {}, linhasUf));
+    el.append(h('section', { class: 'card pad' }, h('h2', {}, 'Por estado'),
+      h('p', { class: 'note' }, `Foram ${ps.length} testes. Por puro acaso, cerca de ${Math.round(ps.length * 0.05)} dariam p < 0,05; deram ${ps.filter((v) => v < 0.05).length}.`),
+      h('div', { class: 'scroll' }, tabUf)));
+  },
+
+  vizinhanca(el, p) {
+    el.append(cabecalhoPagina(p, 'Bairros vizinhos costumam votar parecido. Para cada escola, comparamos o resultado com o das escolas num raio de 2 km, descontando a variação normal entre vizinhos.',
+      `Para não marcar bairros que simplesmente têm perfil diferente, só entram escolas cujo desvio mudou mais de 10 pontos em relação ao 1º turno. Avaliamos ${fN(A.vizinhanca.locaisAvaliados)} locais; a diferença típica entre escolas vizinhas é de ${fP(A.vizinhanca.desvioTipico)}.`));
+    el.append(tabelaCasos('Locais que destoam dos vizinhos', A.vizinhanca.casos, [colLocal, { t: 'Lula no local', n: 1, f: (r) => fP(r.lula) }, { t: 'Lula nos vizinhos', n: 1, f: (r) => fP(r.vizinhos) },
+      { t: 'Diferença 1º → 2º turno', n: 1, f: (r) => `${fP(r.difPrimeiroTurno)} → ${fP(r.difSegundoTurno)}` }, { t: 'z', n: 1, f: (r) => String(r.z).replace('.', ',') }]));
+  },
+
+  basicas(el, p) {
+    el.append(cabecalhoPagina(p, 'São as verificações da primeira versão: empates exatos, candidato com zero ou poucos votos, comparecimento muito alto, brancos e nulos altos, mudanças entre turnos e problemas operacionais.',
+      'Para três delas calculamos quantos casos seriam esperados por acaso, usando o resultado das outras seções do mesmo local. Quando o observado fica perto do esperado, o padrão não indica nada por si só.'));
+    const tipos = D.tipos.filter((t) => +t.observado > 0).sort((a, b) => b.observado - a.observado);
+    el.append(h('section', { class: 'card pad' }, h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', {}, 'Verificação'), h('th', { class: 'n' }, 'Encontrado'), h('th', { class: 'n' }, 'Esperado por acaso'))),
+      h('tbody', {}, tipos.map((t) => h('tr', { style: 'cursor:pointer', onclick: () => { mostrarVista('resultado'); S.tipoAnom = t.tipo; definirCamada('anomalias'); } }, h('td', {}, t.descricao), h('td', { class: 'n' }, fN(+t.observado)), h('td', { class: 'n' }, t.esperado_acaso === '' ? '–' : fN(+t.esperado_acaso)))))),
+      h('p', { class: 'note' }, 'Clique numa verificação para ver os casos no mapa.')));
+  },
+
+  modelo(el, p) {
+    el.append(cabecalhoPagina(p, `Treinamos um modelo com ${fN(A.modelo.secoes)} seções que prevê o percentual de Lula no 2º turno a partir do 1º turno da própria seção, do resto do município e do perfil do eleitorado (sexo, idade, escolaridade, estado civil, biometria). Ele explica ${fP(100 * A.modelo.r2)} da variação entre seções.`,
+      'Seções que fogem muito da previsão (mais de 5 desvios, já descontando o acaso de seções pequenas) vão para a lista. Quase todas são aldeias e comunidades isoladas, onde a decisão costuma ser coletiva.'));
+    el.append(tabelaCasos('Seções muito diferentes do esperado', A.modelo.casos, [colLocal, { t: 'Lula real', n: 1, f: (r) => fP(r.lulaReal) }, { t: 'Lula esperado', n: 1, f: (r) => fP(r.lulaEsperado) }, { t: 'Votos (L × F)', n: 1, f: (r) => `${r.L} × ${r.F}` }, { t: 'z', n: 1, f: (r) => String(r.z).replace('.', ',') }]));
+    el.append(h('section', { class: 'card pad' }, h('h2', {}, 'O que pesa no modelo'), h('p', { class: 'note' }, 'Coeficientes na escala logit. O resultado do 1º turno da própria seção é, de longe, o que mais explica o 2º turno.'),
+      h('table', { class: 'tbl' }, h('tbody', {}, A.modelo.coeficientes.slice(1).map((c) => h('tr', {}, h('td', {}, c.variavel), h('td', { class: 'n' }, String(c.valor).replace('.', ','))))))));
+  },
+
+  censo(el, p) {
+    el.append(cabecalhoPagina(p, `Comparamos os eleitores aptos de cada município com a população que, pelo Censo 2022, teria 16 anos ou mais em 2026. Em ${fN(A.censo.acima1)} de ${fN(A.censo.municipios)} municípios há mais eleitores do que moradores com idade para votar; em ${fN(A.censo.acima11)}, a sobra passa de 10%.`,
+      'Isso não é fraude na votação: quem se muda costuma manter o título na cidade natal, e o cadastro demora a excluir falecidos. Mas indica um cadastro inflado, com efeitos reais. A abstenção aparente fica maior, e municípios pequenos podem ter eleitores que não moram lá.'));
+    const hist = A.censo.histograma, W = 640, H = 220, m = { l: 40, r: 10, t: 10, b: 34 };
+    const s = svg(W, H); const x = d3.scaleBand(d3.range(hist.length), [m.l, W - m.r]).padding(0.1), y = d3.scaleLinear([0, d3.max(hist)], [H - m.b, m.t]);
+    hist.forEach((v, i) => s.append('rect').attr('x', x(i)).attr('width', x.bandwidth()).attr('y', y(v)).attr('height', y(0) - y(v)).attr('rx', 2).attr('fill', 0.5 + i * 0.05 >= 1 ? CORES.warn : CORES.muted));
+    [0.5, 1, 1.5, 2].forEach((v) => { const i = Math.round((v - 0.5) / 0.05); const xx = i >= hist.length ? W - m.r : x(i); s.append('text').attr('x', xx).attr('y', H - 12).attr('text-anchor', 'middle').text((v === 2 ? '≥ ' : '') + String(v).replace('.', ',') + '×'); });
+    y.ticks(4).forEach((v) => s.append('text').attr('x', m.l - 6).attr('y', y(v)).attr('dy', '0.32em').attr('text-anchor', 'end').text(v));
+    el.append(h('section', { class: 'card pad' }, h('h2', {}, 'Municípios por razão eleitores ÷ população com idade para votar'), s.node(), h('p', { class: 'note' }, `Mediana: ${String(A.censo.mediana).replace('.', ',')}×. Em laranja, municípios com mais eleitores do que moradores aptos.`)));
+    el.append(tabelaCasos('Maiores razões', A.censo.lista, [{ t: 'Município', f: (r) => `${titulo(r.nome)} · ${r.uf}` }, { t: 'Eleitores aptos', n: 1, f: (r) => fN(r.aptos) }, { t: 'População 16+ em 2026', n: 1, f: (r) => fN(r.aptos12) }, { t: 'Razão', n: 1, f: (r) => String(r.razao).replace('.', ',') + '×' }]));
+  },
+};
+
+function urnaObj(c) {
+  const [uf, mun, nome, zona, secao, local, comp, alertas, bioCad, bioUso, cont] = c;
+  return { uf, mun, nome, zona, secao, local, comp, alertas, bioCad, bioUso, cont,
+    det: (tipos) => alertas.filter(([t]) => tipos.includes(t)).map(([t, d]) => h('div', {}, h('span', { class: `tag g${U().tipos[t].g}` }, U().tipos[t].t), ' ', d)) };
+}
+function graficoHoras() {
+  const hv = U().horas, hs = d3.range(24).filter((i) => hv.votos[i] > 1000);
+  const W = 640, H = 230, m = { l: 50, r: 46, t: 14, b: 30 };
+  const s = svg(W, H); const x = d3.scaleBand(hs, [m.l, W - m.r]).padding(0.2);
+  const y = d3.scaleLinear([0, d3.max(hs, (i) => hv.votos[i])], [H - m.b, m.t]), y2 = d3.scaleLinear([0, Math.max(0.1, d3.max(hs, (i) => hv.mes[i] / hv.votos[i]))], [H - m.b, m.t]);
+  hs.forEach((i) => { s.append('rect').attr('x', x(i)).attr('width', x.bandwidth()).attr('y', y(hv.votos[i])).attr('height', y(0) - y(hv.votos[i])).attr('rx', 2).attr('fill', CORES.line); s.append('text').attr('x', x(i) + x.bandwidth() / 2).attr('y', H - 12).attr('text-anchor', 'middle').text(i + 'h'); });
+  y.ticks(4).forEach((v) => s.append('text').attr('x', m.l - 6).attr('y', y(v)).attr('dy', '0.32em').attr('text-anchor', 'end').text(fmtComp.format(v)));
+  y2.ticks(4).forEach((v) => s.append('text').attr('x', W - m.r + 6).attr('y', y2(v)).attr('dy', '0.32em').text(Math.round(v * 100) + '%'));
+  s.append('path').attr('d', d3.line().x((i) => x(i) + x.bandwidth() / 2).y((i) => y2(hv.mes[i] / hv.votos[i]))(hs)).attr('fill', 'none').attr('stroke', CORES.warn).attr('stroke-width', 2.5);
+  return h('section', { class: 'card pad' }, h('h2', {}, 'Votos por hora e parcela liberada pelo mesário'), s.node(),
+    h('p', { class: 'note' }, 'Barras: votos computados em cada hora (horário local da urna). Linha laranja: parcela de eleitores liberados pelo mesário naquela hora. Pico no fim do dia seria um sinal de alerta.'));
+}
+
+// ---------------- início ----------------
+Promise.all(['brasil', 'malha_municipios', 'malha_ufs', 'anomalias'].map((f) => fetch(`data/${f}.json`).then((r) => { if (!r.ok) throw new Error(f); return r.json(); })))
+  .then(([br, mm, mu, an]) => {
+    D = br; NB = D.timeline.length;
+    MUNIS = D.munis.map((r) => ({ uf: r[0], cod: r[1], nome: r[2], ibge: r[3], sec: r[4], aptos: r[5], comp: r[6], bn: r[7], L: r[8], F: r[9], L1: r[10], F1: r[11], O1: r[12], aptos1: r[13], comp1: r[14], anom: r[15], tl: r[16], zonas: r[17] }));
+    BY_IBGE = new Map(MUNIS.filter((m) => m.ibge).map((m) => [m.ibge, m]));
+    BY_KEY = new Map(MUNIS.map((m) => [`${m.uf}|${m.cod}`, m]));
+    UFS = new Map(); for (const m of MUNIS) if (!UFS.has(m.uf)) UFS.set(m.uf, { uf: m.uf });
+    for (const u of UFS.values()) u.fin = u.agg = somar(MUNIS.filter((m) => m.uf === u.uf));
+    ANOMS = an.map((r) => ({ tipo: r[0], uf: r[1], cod: r[2], mun: r[3], zona: r[4], secao: r[5], local: r[6], L: r[7], F: r[8], det: r[9], lat: r[10], lon: r[11], g: g(r[0]) }));
+    $('#tempo').max = NB - 1; $('#tempo').value = NB - 1;
+    lerCores();
+    GEO = construirGeo(mm, mu);
+    projetar();
+    ANOMS.forEach((a) => { a.xy = a.lat != null ? proj([a.lon, a.lat]) : null; });
+    EVENTOS = eventos();
+    $('#carregando').remove();
+    iniciarMapa(); busca(); migalhas(); cabecalho(); legenda(); painelEsquerdo(); painelDireito(); desenhar();
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { lerCores(); legenda(); desenhar(); painelEsquerdo(); painelDireito(); });
+  })
+  .catch((e) => { $('#carregando').textContent = 'Não foi possível carregar os dados (' + e.message + '). Recarregue a página.'; });
+})();
+</script>
+
+</body>
+</html>
