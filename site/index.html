@@ -4,6 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Resultado do 2º turno presidencial de 2026 por município, replay da apuração e auditoria independente das 499 mil urnas com dados públicos do TSE.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:title" content="Apuração 2026 · Lula 51,79% × Flávio 48,21%">
+<meta property="og:description" content="Resultado do 2º turno presidencial de 2026 por município, replay da apuração e auditoria independente das 499 mil urnas com dados públicos do TSE.">
+<meta property="og:url" content="https://auditoria-presidente-2026.vercel.app/">
+<meta property="og:image" content="https://auditoria-presidente-2026.vercel.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Lula 51,79% × Flávio 48,21%; 499.178 urnas auditadas">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://auditoria-presidente-2026.vercel.app/og.png">
 </head>
 <body style="margin:0">
 <title>Apuração 2026 · 2º turno</title>
@@ -165,6 +176,17 @@ details.local summary small { color: var(--muted); grid-column: 1 / -1; }
 .note { font-size: 12px; color: var(--muted); line-height: 1.45; }
 
 /* navegação e menu de anomalias */
+.modal { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.55); overflow: auto; display: grid; justify-items: center; align-items: start; padding-block: max(24px, env(safe-area-inset-top, 0px)) 24px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.modal-corpo { width: min(680px, 100%); display: grid; gap: 12px; padding: 16px 18px; }
+.form-urna { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr)); gap: 8px; align-items: end; }
+.form-urna label { display: grid; gap: 3px; font-size: 12px; color: var(--muted); }
+.form-urna select, .form-urna input { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; width: 100%; min-width: 0; }
+.btn-prim { background: var(--fg); color: var(--bg); border: 0; border-radius: 8px; padding: 8px 14px; font-weight: 600; }
+.checks { display: grid; gap: 7px; }
+.checks div { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; font-size: 13.5px; }
+.checks b.sim { color: var(--ok); } .checks b.nao { color: var(--bad); }
+.toast { position: fixed; z-index: 60; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.35); padding: 10px 14px; display: grid; gap: 6px; width: min(520px, calc(100% - 32px)); font-size: 13px; }
+.toast input { width: 100%; background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
 .vistas { display: inline-flex; background: var(--panel2); border-radius: 999px; padding: 3px; gap: 2px; }
 .vistas button { border: 0; background: none; padding: 6px 14px; border-radius: 999px; font-weight: 600; color: var(--muted); }
 .vistas button[aria-pressed="true"] { background: var(--panel); color: var(--fg); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
@@ -225,6 +247,8 @@ details.local summary small { color: var(--muted); grid-column: 1 / -1; }
       <input id="busca" type="search" placeholder="Buscar município ou estado…" autocomplete="off" aria-label="Buscar município ou estado">
       <div class="sugest" id="sugest" hidden></div>
     </div>
+    <button class="icon-btn" id="btn-urna" type="button">Confira sua urna</button>
+    <button class="icon-btn" id="btn-compartilhar" type="button" aria-label="Copiar link desta tela">Compartilhar</button>
     <button class="icon-btn" id="tema" type="button" aria-label="Alternar tema claro/escuro">◐ Tema</button>
   </div>
 
@@ -291,6 +315,16 @@ details.local summary small { color: var(--muted); grid-column: 1 / -1; }
 
     <div class="col right" id="direita"></div>
   </div>
+  <div class="modal" id="modal-urna" hidden role="dialog" aria-modal="true" aria-labelledby="urna-titulo">
+    <section class="card modal-corpo">
+      <div class="row2" style="align-items:center"><h2 id="urna-titulo" style="font-size:19px">Confira sua urna</h2><button class="icon-btn" id="urna-fechar" type="button" aria-label="Fechar">Fechar</button></div>
+      <p class="note">Escolha o local e a seção (está no seu título de eleitor ou no e-Título) para ver a auditoria completa daquela urna: assinatura digital, certificado, hashes, recontagem voto a voto e o horário de cada etapa.</p>
+      <div class="form-urna" id="form-urna"></div>
+      <div id="urna-ficha"></div>
+    </section>
+  </div>
+  <div class="toast" id="toast" hidden></div>
+
   <div class="anom" id="anom" hidden>
     <aside class="card anom-menu" id="anom-menu" aria-label="Análises de anomalias"></aside>
     <section class="anom-corpo" id="anom-corpo" aria-live="polite"><div class="card pad"><p class="muted">Carregando análises…</p></div></section>
@@ -570,13 +604,15 @@ function migalhas() {
   if (S.mun) add(titulo(S.mun.nome), () => {});
 }
 const titulo = (s) => s.toLowerCase().replace(/(^|\s)(\S)/g, (_, a, c) => a + c.toUpperCase()).replace(/ (De|Do|Da|Dos|Das|E) /g, (x) => x.toLowerCase());
-function abrirBrasil() { S.uf = null; S.mun = null; d3.select(cv).transition().duration(650).call(zoom.transform, d3.zoomIdentity); migalhas(); painelDireito(); desenhar(); }
+function abrirBrasil() { definirRota(''); S.uf = null; S.mun = null; d3.select(cv).transition().duration(650).call(zoom.transform, d3.zoomIdentity); migalhas(); painelDireito(); desenhar(); }
 function abrirUF(uf) {
   if (uf === 'ZZ') { S.uf = 'ZZ'; S.mun = null; migalhas(); painelDireito(); return; }
+  definirRota('uf-' + uf);
   S.uf = uf; S.mun = null; const u = UFF.find((x) => x.uf === uf); if (u) irPara(u.b, 30);
   migalhas(); painelDireito(); desenhar();
 }
 function abrirMun(m) {
+  definirRota(`m-${m.uf}-${m.cod}`);
   S.uf = m.uf; S.mun = m; if (m.feat) irPara(m.feat.b, 60);
   migalhas(); painelDireito(); desenhar();
 }
@@ -826,7 +862,7 @@ function painelMunicipio(el, m) {
     el.append(ac);
   }
   // locais e seções
-  const lc = h('section', { class: 'card pad' }, h('h2', {}, 'Locais de votação e seções'), h('p', { class: 'note' }, 'Abra um local para ver cada seção (urna), com o horário em que o boletim chegou ao TSE.'));
+  const lc = h('section', { class: 'card pad' }, h('h2', {}, 'Locais de votação e seções'), h('p', { class: 'note' }, 'Abra um local para ver cada seção (urna). Clique no número da seção para ver a auditoria completa daquela urna.'));
   const corpo = h('div', {}, h('p', { class: 'muted' }, 'Carregando seções…'));
   lc.append(corpo); el.append(lc);
   carregarUF(m.uf).then((d) => {
@@ -844,7 +880,7 @@ function painelMunicipio(el, m) {
         det.addEventListener('toggle', () => {
           if (!det.open || det.dataset.ok) return; det.dataset.ok = 1;
           const tb = h('tbody');
-          for (const x of o.secs.sort((p, q) => p[1] - q[1])) tb.append(h('tr', {}, h('td', { class: 'n' }, x[1]), h('td', { class: 'n' }, x[2]), h('td', { class: 'n' }, pct(x[3] / x[2], 0)), h('td', { class: 'n l-c' }, x[4]), h('td', { class: 'n f-c' }, x[5]), h('td', { class: 'n' }, x[6]), h('td', { class: 'n muted' }, x[9]), h('td', {}, (x[11] || []).map((t) => h('span', { class: `tag g${g(t)}` }, CURTO[t] || t)))));
+          for (const x of o.secs.sort((p, q) => p[1] - q[1])) tb.append(h('tr', { style: 'cursor:pointer', title: 'Ver a auditoria desta urna', onclick: () => abrirUrna({ uf: m.uf, mun: m.cod, zona: o.lo[1], secao: x[1] }) }, h('td', { class: 'n' }, h('span', { style: 'text-decoration:underline' }, x[1])), h('td', { class: 'n' }, x[2]), h('td', { class: 'n' }, pct(x[3] / x[2], 0)), h('td', { class: 'n l-c' }, x[4]), h('td', { class: 'n f-c' }, x[5]), h('td', { class: 'n' }, x[6]), h('td', { class: 'n muted' }, x[9]), h('td', {}, (x[11] || []).map((t) => h('span', { class: `tag g${g(t)}` }, CURTO[t] || t)))));
           det.append(h('div', { style: 'overflow:auto' }, h('table', { class: 'tbl' }, h('thead', {}, h('tr', {}, h('th', { class: 'n' }, 'Seção'), h('th', { class: 'n' }, 'Aptos'), h('th', { class: 'n' }, 'Compar.'), h('th', { class: 'n' }, 'Lula'), h('th', { class: 'n' }, 'Flávio'), h('th', { class: 'n' }, 'Br+Nu'), h('th', { class: 'n' }, 'BU'), h('th', {}, ''))), tb)));
         });
         return det;
@@ -923,7 +959,8 @@ function mostrarVista(v) {
   document.querySelectorAll('.vistas button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.vista === v));
   document.querySelector('.main').hidden = v !== 'resultado';
   $('#anom').hidden = v !== 'anomalias';
-  if (v === 'anomalias') carregarAnomalias();
+  if (v === 'anomalias') { definirRota('a-' + pagina); carregarAnomalias(); }
+  else definirRota(S.mun ? `m-${S.mun.uf}-${S.mun.cod}` : S.uf ? 'uf-' + S.uf : '');
 }
 document.querySelectorAll('.vistas button').forEach((b) => b.addEventListener('click', () => mostrarVista(b.dataset.vista)));
 
@@ -972,7 +1009,7 @@ function menuAnomalias() {
   const el = $('#anom-menu'); el.replaceChildren(); let grupo = null;
   for (const p of PAGINAS) {
     if (p.g !== grupo) { grupo = p.g; el.append(h('h3', {}, grupo)); }
-    el.append(h('button', { type: 'button', 'aria-current': p.id === pagina ? 'page' : null, onclick: () => { pagina = p.id; menuAnomalias(); renderPagina(); window.scrollTo({ top: 0 }); } }, h('span', {}, p.t), p.id === 'resumo' ? null : pill(p.v())));
+    el.append(h('button', { type: 'button', 'aria-current': p.id === pagina ? 'page' : null, onclick: () => { pagina = p.id; definirRota('a-' + p.id); menuAnomalias(); renderPagina(); window.scrollTo({ top: 0 }); } }, h('span', {}, p.t), p.id === 'resumo' ? null : pill(p.v())));
   }
 }
 function cabecalhoPagina(p, ...explicacao) {
@@ -1110,7 +1147,7 @@ const RENDER = {
           'É o efeito esperado quando os eleitores dos candidatos eliminados no 1º turno migram mais para um lado. Em todos esses municípios os votos de cada urna batem com o boletim, com o registro digital do voto e com a assinatura digital.'], []),
       cartao('"Lula ganhou 2 milhões de votos na Bahia depois que a votação foi prorrogada."', ['problema', 'Falso'],
         [`Entre os turnos, Lula cresceu ${n(b.L - b.L1)} votos na Bahia (de ${n(b.L1)} para ${n(b.L)}), e não 2 milhões. Flávio também cresceu, de ${n(b.F1)} para ${n(b.F)}.`,
-          G.pos17 && G.pos17.porUF && G.pos17.porUF.BA != null ? `Pelos logs das urnas baianas, ${n(G.pos17.porUF.BA)} votos foram computados a partir das 17h, incluindo eleitores que já estavam na fila no horário de encerramento.` : 'A contagem dos votos depois das 17h pelos logs das urnas ainda está sendo processada.'],
+          G.pos17 && G.pos17.porUF && G.pos17.porUF.BA != null ? `Pelos logs das urnas baianas, ${n(G.pos17.porUF.BA)} votos foram computados a partir das 17h de Brasília, quase todos até 17h05, de eleitores que já estavam na fila. A Lupa cita 1.656 votos nas seções que ficaram abertas pela prorrogação; a diferença provavelmente vem do critério de contagem, já que o nosso total nacional (${n(G.pos17.total)}) bate com o do TSE (34.393). Com qualquer um dos dois números, a alegação de 2 milhões é falsa.` : 'A contagem dos votos depois das 17h pelos logs das urnas ainda está sendo processada.'],
         [['https://www.agencialupa.org/eleicoes/2026/10/28/e-falso-que-lula-ganhou-2-milhoes-de-votos-na-bahia-apos-decisao-do-stf/', 'Lupa']]),
       cartao('"Os votos depois das 17h decidiram a eleição."', ['problema', 'Falso'],
         [G.pos17 ? `Contando direto nos logs de todas as urnas: ${n(G.pos17.total)} votos foram computados a partir das 17h de Brasília, ${n(G.pos17.apos18)} a partir das 18h e ${n(G.pos17.apos19)} a partir das 19h, em ${n(G.pos17.secoes)} seções. O TSE divulgou 34.393.` : 'O TSE divulgou 34.393 votos computados depois das 17h.',
@@ -1405,6 +1442,134 @@ function graficoHoras() {
     h('p', { class: 'note' }, 'Barras: votos computados em cada hora (horário local da urna). Linha laranja: parcela de eleitores liberados pelo mesário naquela hora. Pico no fim do dia seria um sinal de alerta.'));
 }
 
+// ---------------- links compartilháveis ----------------
+// O visualizador do Claude só repassa "#token" simples (letras, números, - . _ ~); o mesmo formato funciona no site.
+const ARTIFACT_URL = 'https://claude.ai/artifact/3Y4N2B5iAU5fov57BfJtDV';
+let rotaAtual = '';
+function definirRota(t) {
+  rotaAtual = t;
+  try { history.replaceState(null, '', t ? '#' + t : location.pathname + location.search); } catch (e) {}
+}
+function aplicarRota(t) {
+  if (!t || t === rotaAtual) return;
+  const p = t.split('-');
+  if (p[0] === 'a' && p[1]) { if (PAGINAS.some((x) => x.id === p[1])) pagina = p[1]; mostrarVista('anomalias'); return; }
+  if (p[0] === 'uf' && NOMES[p[1]]) { mostrarVista('resultado'); abrirUF(p[1]); return; }
+  const m = BY_KEY.get(`${p[1]}|${+p[2]}`);
+  if (p[0] === 'm' && m) { mostrarVista('resultado'); abrirMun(m); return; }
+  if (p[0] === 's' && m && p[3] && p[4]) { mostrarVista('resultado'); abrirMun(m); abrirUrna({ uf: p[1], mun: +p[2], zona: +p[3], secao: +p[4], turno: p[5] === 't1' ? '1' : '2' }); }
+}
+function linkAtual() {
+  const embutido = window.top !== window || /claude/.test(location.hostname);
+  return (embutido ? ARTIFACT_URL : location.origin + location.pathname) + (rotaAtual ? '#' + rotaAtual : '');
+}
+let toastTimer;
+function aviso(texto, link) {
+  const t = $('#toast'); t.replaceChildren(h('div', {}, texto));
+  if (link) { const i = h('input', { type: 'text', value: link, readonly: true, 'aria-label': 'Link desta tela' }); t.append(i); setTimeout(() => { i.focus(); i.select(); }, 0); }
+  t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, link ? 9000 : 3000);
+}
+$('#btn-compartilhar').addEventListener('click', () => {
+  const link = linkAtual();
+  const fallback = () => aviso('Copie o link abaixo:', link);
+  try { navigator.clipboard.writeText(link).then(() => aviso('Link copiado. Quem abrir verá exatamente esta tela.'), fallback); } catch (e) { fallback(); }
+});
+
+// ---------------- confira sua urna ----------------
+const urnaCache = {};
+function dadosUrna(turno, uf) {
+  const k = turno + uf;
+  if (!urnaCache[k]) urnaCache[k] = fetch(`data/urna/${turno}/${uf}.json`).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }).then((d) => {
+    const idx = new Map(); for (const s of d.secoes) idx.set(`${s[0]}|${s[1]}|${s[2]}`, Object.fromEntries(d.campos.map((c, i) => [c, s[i]])));
+    return idx;
+  });
+  return urnaCache[k];
+}
+const hm = (m) => (m == null ? '–' : `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`);
+let urnaSel = { uf: 'SP', mun: null, zona: null, secao: '', turno: '2' };
+let rotaAntesDaUrna = '';
+
+function formUrna() {
+  const el = $('#form-urna'); el.replaceChildren();
+  const ufs = Object.keys(NOMES).filter((u) => UFS.has(u)).sort((a, b) => NOMES[a].localeCompare(NOMES[b], 'pt'));
+  const selUf = h('select', { id: 'urna-uf', 'aria-label': 'Estado' }, ufs.map((u) => h('option', { value: u, selected: u === urnaSel.uf ? true : null }, NOMES[u])));
+  const munis = MUNIS.filter((m) => m.uf === urnaSel.uf).sort((a, b) => a.nome.localeCompare(b.nome, 'pt'));
+  if (!munis.some((m) => m.cod === urnaSel.mun)) urnaSel.mun = munis[0] && munis[0].cod;
+  const m = BY_KEY.get(`${urnaSel.uf}|${urnaSel.mun}`);
+  const selMun = h('select', { id: 'urna-mun', 'aria-label': 'Município' }, munis.map((x) => h('option', { value: x.cod, selected: x.cod === urnaSel.mun ? true : null }, titulo(x.nome))));
+  const zonas = m ? m.zonas.map((z) => z[0]).sort((a, b) => a - b) : [];
+  if (!zonas.includes(urnaSel.zona)) urnaSel.zona = zonas[0];
+  const selZona = h('select', { id: 'urna-zona', 'aria-label': 'Zona eleitoral' }, zonas.map((z) => h('option', { value: z, selected: z === urnaSel.zona ? true : null }, `Zona ${z}`)));
+  const inSec = h('input', { id: 'urna-secao', type: 'number', min: 1, inputmode: 'numeric', placeholder: 'ex.: 26', value: urnaSel.secao || '', 'aria-label': 'Seção' });
+  const seg = h('div', { class: 'seg', role: 'group', 'aria-label': 'Turno' });
+  [['2', '2º turno'], ['1', '1º turno']].forEach(([k, t]) => seg.append(h('button', { type: 'button', 'aria-pressed': urnaSel.turno === k ? 'true' : 'false', onclick: () => { urnaSel.turno = k; formUrna(); if (urnaSel.secao) mostrarFicha(); } }, t)));
+  const ver = h('button', { type: 'button', class: 'btn-prim', onclick: () => { urnaSel.secao = +inSec.value; if (urnaSel.secao) mostrarFicha(); else inSec.focus(); } }, 'Ver urna');
+  selUf.onchange = () => { urnaSel.uf = selUf.value; urnaSel.mun = null; formUrna(); };
+  selMun.onchange = () => { urnaSel.mun = +selMun.value; urnaSel.zona = null; formUrna(); };
+  selZona.onchange = () => { urnaSel.zona = +selZona.value; };
+  inSec.addEventListener('keydown', (e) => { if (e.key === 'Enter') ver.click(); });
+  el.append(h('label', {}, 'Estado', selUf), h('label', {}, 'Município', selMun), h('label', {}, 'Zona', selZona), h('label', {}, 'Seção', inSec), h('label', {}, 'Turno', seg), ver);
+}
+
+async function mostrarFicha() {
+  const { uf, mun, zona, secao, turno } = urnaSel;
+  definirRota(`s-${uf}-${mun}-${zona}-${secao}${turno === '1' ? '-t1' : ''}`);
+  const out = $('#urna-ficha'); out.replaceChildren(h('p', { class: 'muted' }, 'Carregando a auditoria desta urna…'));
+  let u, local = null, tse = null;
+  try { u = (await dadosUrna(turno, uf)).get(`${mun}|${zona}|${secao}`); }
+  catch (e) { out.replaceChildren(h('p', { class: 'muted' }, turno === '1' ? 'A auditoria das urnas do 1º turno ainda está sendo processada.' : 'Não foi possível carregar a auditoria deste estado. Recarregue a página.')); return; }
+  try {
+    const d = await carregarUF(uf);
+    for (const s of d.secoes) { const lo = d.locais[s[0]]; if (lo[0] === mun && lo[1] === zona && s[1] === secao) { local = lo; tse = { L: s[4], F: s[5], comp: s[3], L1: s[7], F1: s[8] }; break; } }
+  } catch (e) {}
+  const m = BY_KEY.get(`${uf}|${mun}`);
+  const cab = h('div', {}, h('h2', { style: 'font-size:17px' }, `Seção ${secao} · Zona ${zona} · ${m ? titulo(m.nome) : ''}/${uf}`), local ? h('div', { class: 'muted' }, titulo(local[2]) + (local[3] ? ' · ' + titulo(local[3]) : '')) : null);
+  if (!u) { out.replaceChildren(cab, h('p', {}, 'Não encontramos essa seção nesse município e zona. Confira os números no título de eleitor ou no e-Título, ou abra o município no mapa e escolha a seção na lista de locais.')); return; }
+  const f = u.flags, ok = (b) => b;
+  const L = turno === '2' ? u.L : u.L, F = u.F;
+  const confereTSE = turno === '2' && tse ? tse.L === u.L && tse.F === u.F && tse.comp === u.comp : null;
+  const itens = [
+    [ok(f & 1), `Assinatura digital da urna válida (${f & 32 ? 'ECDSA P-521, urna modelo 2013/2015' : 'Ed521, urna modelo 2020/2022'})`],
+    [ok(f & 4), `Certificado da urna emitido pela ${['AC UE2020', 'AC URNA', 'AC UE2022'][u.ac] || 'autoridade do TSE'}`],
+    [ok(f & 2), `${u.hashConf || 0} arquivos com hash conferido (boletim, registro de votos, imagem do boletim e log)`],
+    [ok(f & 8), 'Recontagem voto a voto pelo registro digital do voto bate com o boletim'],
+  ];
+  if (confereTSE != null) itens.push([confereTSE, 'Boletim bate com o resultado divulgado pelo TSE para esta seção']);
+  const tudo = itens.every(([b]) => b);
+  const tz = u.fuso ? ` (horário local da urna; Brasília ${u.fuso > 0 ? '−' : '+'}${Math.abs(u.fuso)} h)` : '';
+  out.replaceChildren(cab,
+    h('div', { class: 'okbox', style: tudo ? '' : `border-color:${CORES.bad}` }, h('b', { style: tudo ? '' : `color:${CORES.bad}` }, tudo ? '✓' : '!'), h('div', {}, h('div', { style: 'font-weight:600' }, tudo ? 'Tudo confere nesta urna' : 'Alguma verificação falhou'), h('div', { class: 'note' }, `${turno}º turno · ${fN(u.comp)} eleitores votaram`))),
+    h('div', { class: 'checks' }, itens.map(([b, t]) => h('div', {}, h('b', { class: b ? 'sim' : 'nao' }, b ? '✓' : '✗'), h('span', {}, t)))),
+    h('div', { class: 'statgrid' },
+      kpi('Lula', fN(L), u.comp ? fP(100 * L / (L + F)) + ' dos válidos' : null, CORES.lula),
+      kpi('Flávio', fN(F), u.comp ? fP(100 * F / (L + F)) + ' dos válidos' : null, CORES.flavio),
+      kpi('Votaram com a digital', fP(u.comp ? 100 * u.bio / u.comp : null), `${fN(u.bio)} de ${fN(u.comp)}`),
+      kpi('Liberados pelo mesário', fN(u.mesHab), u.comp ? fP(100 * u.mesHab / u.comp) + ' dos eleitores' : null)),
+    h('div', { class: 'checks' },
+      h('div', {}, h('b', {}, '•'), h('span', {}, `Urna aberta às ${hm(u.abert)} e encerrada às ${hm(u.fech)}${tz}.`)),
+      h('div', {}, h('b', {}, '•'), h('span', {}, `Primeiro voto às ${hm(u.primeiro)}, último às ${hm(u.ultimo)}.`)),
+      u.pos17 ? h('div', {}, h('b', {}, '•'), h('span', {}, `${fN(u.pos17)} voto(s) depois das 17h de Brasília, de eleitores que estavam na fila no encerramento.`)) : null,
+      f & 16 ? h('div', {}, h('b', {}, '•'), h('span', {}, 'A urna foi trocada por uma urna de contingência durante a votação; os votos das duas foram somados.')) : null),
+    h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' },
+      h('button', { type: 'button', class: 'icon-btn', onclick: () => $('#btn-compartilhar').click() }, 'Compartilhar esta urna'),
+      m ? h('button', { type: 'button', class: 'icon-btn', onclick: () => { fecharUrna(); abrirMun(m); } }, 'Ver o município no mapa') : null),
+    h('p', { class: 'note' }, 'Para conferir com o boletim impresso afixado na seção, compare os votos de cada candidato e o código de identificação da urna. Como cada verificação é feita, está na página "Metodologia e código" do menu Anomalias.'));
+}
+function abrirUrna(sel) {
+  if (!$('#modal-urna').hidden && sel == null) return;
+  rotaAntesDaUrna = rotaAtual;
+  if (sel) urnaSel = { ...urnaSel, ...sel, turno: sel.turno || urnaSel.turno };
+  else if (S.mun) urnaSel = { ...urnaSel, uf: S.mun.uf, mun: S.mun.cod, zona: null, secao: '' };
+  formUrna(); $('#urna-ficha').replaceChildren();
+  $('#modal-urna').hidden = false;
+  if (sel && sel.secao) mostrarFicha(); else setTimeout(() => $('#urna-secao') && $('#urna-secao').focus(), 0);
+}
+function fecharUrna() { $('#modal-urna').hidden = true; definirRota(rotaAntesDaUrna); }
+$('#btn-urna').addEventListener('click', () => abrirUrna());
+$('#urna-fechar').addEventListener('click', fecharUrna);
+$('#modal-urna').addEventListener('click', (e) => { if (e.target.id === 'modal-urna') fecharUrna(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#modal-urna').hidden) fecharUrna(); });
+
 // ---------------- início ----------------
 Promise.all(['brasil', 'malha_municipios', 'malha_ufs', 'anomalias'].map((f) => fetch(`data/${f}.json`).then((r) => { if (!r.ok) throw new Error(f); return r.json(); })))
   .then(([br, mm, mu, an]) => {
@@ -1423,6 +1588,7 @@ Promise.all(['brasil', 'malha_municipios', 'malha_ufs', 'anomalias'].map((f) => 
     EVENTOS = eventos();
     $('#carregando').remove();
     iniciarMapa(); busca(); migalhas(); cabecalho(); legenda(); painelEsquerdo(); painelDireito(); desenhar();
+    aplicarRota(location.hash.slice(1)); window.addEventListener('hashchange', () => aplicarRota(location.hash.slice(1)));
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { lerCores(); legenda(); desenhar(); painelEsquerdo(); painelDireito(); });
   })
   .catch((e) => { $('#carregando').textContent = 'Não foi possível carregar os dados (' + e.message + '). Recarregue a página.'; });

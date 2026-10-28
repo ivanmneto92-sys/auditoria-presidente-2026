@@ -2,13 +2,26 @@
 
 Resultado do 2º turno presidencial de 2026 por município, replay da apuração e auditoria das urnas eletrônicas, feitos só com dados públicos do TSE e do IBGE.
 
-**Site:** em publicação
+**Site:** https://auditoria-presidente-2026.vercel.app (também disponível como artifact no Claude)
 
 > Uma anomalia, neste projeto, é um ponto para conferir no boletim de urna, não uma prova de fraude. Sempre que possível, cada verificação é comparada com o que seria esperado por acaso.
 
 ## Resultado da auditoria
 
-A auditoria completa dos dois turnos está sendo processada; os números finais entram aqui quando terminar.
+**2º turno (25/10/2026), 499.178 urnas eletrônicas:**
+
+| Verificação | Resultado |
+|---|---|
+| Assinatura digital do manifesto (Ed521 em 399.250 urnas, ECDSA P-521 em 99.928) | 499.178 de 499.178 válidas |
+| Certificado da urna emitido por autoridade do TSE (AC UE2022, AC UE2020, AC URNA) | 499.178 de 499.178 |
+| Hash SHA-512 de cada arquivo contra o manifesto assinado | 499.178 de 499.178 |
+| Recontagem voto a voto pelo registro digital do voto = boletim | 499.178 de 499.178 |
+| Boletim de urna = resultado divulgado pelo TSE | 499.178 de 499.178 |
+| Votos computados a partir das 17h de Brasília (contados nos logs) | 34.584 (TSE: 34.393); 1.990 a partir das 18h; 11 a partir das 19h |
+
+Outras 29 seções, no exterior, votaram em cédula de papel e não têm arquivos de urna. A auditoria do 1º turno (mesmas verificações) entra na próxima atualização.
+
+Alegações que circularam após o 2º turno, confrontadas com estes dados, estão na página "Alegações × dados" do site.
 
 ## O que tem aqui
 
